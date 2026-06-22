@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify Cover Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #000000;
+      color: #fff;
+      font-family: 'Inter', system-ui, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Centered canvas ── */
+    .canvas-wrap {
+      position: fixed;
+      top: 0;
+      left: 292px;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    canvas {
+      width: 460px;
+      height: 460px;
+      border-radius: 10px;
+      display: block;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      width: 460px;
+      height: 460px;
+      border-radius: 10px;
+      background: #141414;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #444;
+      font-size: 12px;
+      transition: opacity 0.4s;
+      pointer-events: all;
+    }
+
+    .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+    .big-spinner {
+      width: 22px; height: 22px;
+      border: 2px solid #222;
+      border-top-color: #555;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    /* ── Fixed left panel — exact Paper design ── */
+    .panel {
+      position: fixed;
+      left: 16px;
+      top: 16px;
+      width: 260px;
+      background: #161616;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.071); /* #FFFFFF12 */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header row */
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 12px 8px 12px;
+      background: #161616;
+    }
+
+    .layout-title {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+
+    /* Layout dropdown */
+    .layout-dropdown-wrap {
+      position: relative;
+    }
+
+    .layout-dropdown-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border: none;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .layout-dropdown-btn .chevron {
+      width: 14px;
+      height: 14px;
+      color: rgba(255,255,255,0.3);
+      transition: transform 0.15s;
+      flex-shrink: 0;
+    }
+
+    .layout-dropdown-wrap.open .chevron {
+      transform: rotate(180deg);
+    }
+
+    .layout-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: #1e1e1e;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      overflow: hidden;
+      z-index: 100;
+      min-width: 100px;
+    }
+
+    .layout-dropdown-wrap.open .layout-dropdown-menu {
+      display: block;
+    }
+
+    .layout-option {
+      display: block;
+      width: 100%;
+      padding: 7px 12px;
+      border: none;
+      background: transparent;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.45);
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s;
+      letter-spacing: 0.2px;
+    }
+
+    .layout-option:hover {
+      background: #282828;
+      color: rgba(255,255,255,0.75);
+    }
+
+    /* Content area */
+    .panel-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      flex: 1;
+    }
+
+    /* Section label row */
+    .section-label {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding-top: 16px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .section-label span {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.302); /* #FFFFFF4D */
+    }
+
+    /* Slider row */
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-width: 0;
+    }
+
+    .row.hidden { display: none; }
+
+    .row-label {
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.4); /* #FFFFFF66 */
+      line-height: 16px;
+    }
+
+    .row-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 146px; /* w-36.5 */
+      flex-shrink: 0;
+    }
+
+    /* Custom slider track — 20px tall, Paper design */
+    .slider-track {
+      height: 20px;
+      border-radius: 2px;
+      flex: 1;
+      position: relative;
+      background: #1D1D1D;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .slider-fill {
+      position: absolute;
+      left: 0; top: 0;
+      height: 100%;
+      background: #282828;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .slider-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      margin: 0;
+      -webkit-appearance: none;
+    }
+
+    .row-value {
+      width: 24px; /* w-6 */
+      text-align: right;
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.4);
+      line-height: 16px;
+    }
+
+    /* Background color pills */
+    .bg-pills {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px; /* gap-1 */
+      width: 171px; /* w-42.75 */
+      flex-shrink: 0;
+    }
+
+    .bg-pill {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      padding: 4px 12px;
+      border: none;
+      background: #1D1D1D;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.502); /* #FFFFFF80 */
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .bg-pill.active {
+      background: #282828;
+      color: rgba(255,255,255,0.75);
+    }
+
+    /* Push to Spotify area */
+    .actions-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding-top: 16px;
+      height: 46px;
+      flex-shrink: 0;
+    }
+
+    .btn-push {
+      flex: 1;
+      height: 30px;
+      border-radius: 100px;
+      border: none;
+      background: #1D1D1D;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.502);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-push:not(:disabled):hover {
+      background: #242424;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .btn-push:disabled { opacity: 0.4; cursor: default; }
+
+    .btn-reload {
+      width: 30px;
+      height: 30px;
+      border-radius: 100px;
+      border: none;
+      background: #1D1D1D;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .btn-reload:hover { color: rgba(255,255,255,0.7); }
+
+    .status {
+      font-size: 10px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.25);
+      min-height: 13px;
+      text-align: center;
+      padding: 4px 0 8px;
+    }
+
+    .status.ok { color: rgba(29,185,84,0.8); }
+    .status.err { color: rgba(200,60,60,0.9); }
+
+    .spinner {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-top-color: rgba(255,255,255,0.4);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 4px;
+      vertical-align: -1px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- Centered canvas -->
+  <div class="canvas-wrap">
+    <canvas id="canvas" width="1000" height="1000"></canvas>
+    <div class="loading-overlay" id="overlay">
+      <div class="big-spinner"></div>
+      <span id="overlay-msg">Loading playlist…</span>
+    </div>
+  </div>
+
+  <!-- Fixed left panel — Paper design -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="layout-dropdown-wrap" id="layout-dropdown-wrap">
+        <button class="layout-dropdown-btn" id="layout-dropdown-btn">
+          <div class="layout-title" id="layout-title">Bubble</div>
+          <svg class="chevron" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="layout-dropdown-menu" id="layout-dropdown-menu">
+          <button class="layout-option" data-layout="beehive">Beehive</button>
+          <button class="layout-option" data-layout="strips">Strips</button>
+          <button class="layout-option" data-layout="grid">Grid</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- SIZE -->
+      <div class="section-label"><span>Size</span></div>
+
+      <div class="row" id="row-maxTracks">
+        <span class="row-label" id="label-maxTracks">Max. Circles</span>
+        <div class="row-right">
+          <div class="slider-track">
+            <div class="slider-fill" id="fill-maxTracks"></div>
+            <input class="slider-input" type="range" id="maxTracks" min="4" max="300" value="200" step="1">
+          </div>
+          <span class="row-value" id="val-maxTracks">200</span>
+        </div>
+      </div>
+
+      <div class="row" id="row-maxRadius">
+        <span class="row-label">Largest (px)</span>
+        <div class="row-right">
+          <div class="slider-track">
+            <div class="slider-fill" id="fill-maxRadius"></div>
+            <input class="slider-input" type="range" id="maxRadius" min="20" max="200" value="75" step="5">
+          </div>
+          <span class="row-value" id="val-maxRadius">75</span>
+        </div>
+      </div>
+
+      <div class="row" id="row-minRadius">
+        <span class="row-label">Smallest (px)</span>
+        <div class="row-right">
+          <div class="slider-track">
+            <div class="slider-fill" id="fill-minRadius"></div>
+            <input class="slider-input" type="range" id="minRadius" min="4" max="80" value="8" step="2">
+          </div>
+          <span class="row-value" id="val-minRadius">8</span>
+        </div>
+      </div>
+
+      <div class="row" id="row-padding">
+        <span class="row-label">Gap (px)</span>
+        <div class="row-right">
+          <div class="slider-track">
+            <div class="slider-fill" id="fill-padding"></div>
+            <input class="slider-input" type="range" id="padding" min="0" max="30" value="3" step="1">
+          </div>
+          <span class="row-value" id="val-padding">3</span>
+        </div>
+      </div>
+
+      <!-- STYLE -->
+      <div class="section-label"><span>Style</span></div>
+
+      <div class="row">
+        <span class="row-label">Opacity</span>
+        <div class="row-right">
+          <div class="slider-track">
+            <div class="slider-fill" id="fill-opacity"></div>
+            <input class="slider-input" type="range" id="opacity" min="10" max="100" value="100" step="1">
+          </div>
+          <span class="row-value" id="val-opacity">100</span>
+        </div>
+      </div>
+
+      <!-- BACKGROUND -->
+      <div class="section-label"><span>Background</span></div>
+
+      <div class="row">
+        <span class="row-label">Color</span>
+        <div class="bg-pills" id="bg-pills">
+          <button class="bg-pill active" data-bg="black">Black</button>
+          <button class="bg-pill" data-bg="white">White</button>
+        </div>
+      </div>
+
+      <!-- Push to Spotify -->
+      <div class="actions-row">
+        <button class="btn-reload" id="btn-reload" title="Reload playlist">↺</button>
+        <button class="btn-push" id="btn-publish" disabled>Push to Spotify</button>
+      </div>
+      <div class="status" id="status"></div>
+
+    </div>
+  </div>
+
+  <script>
+    const CANVAS_SIZE = 1000;
+    const CENTER = CANVAS_SIZE / 2;
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // ── Update slider fill widths ─────────────────────────────────────────────
+    function updateFill(id) {
+      const input = document.getElementById(id);
+      const fill = document.getElementById('fill-' + id);
+      if (!fill) return;
+      const pct = (input.value - input.min) / (input.max - input.min) * 100;
+      fill.style.width = pct + '%';
+    }
+
+    ['maxTracks','maxRadius','minRadius','padding','opacity'].forEach(id => {
+      updateFill(id);
+    });
+
+    // ── Web Worker for bubble packing ─────────────────────────────────────────
+    const packer = new Worker('/packer.worker.js');
+    let pendingPack = null, packerBusy = false;
+
+    function requestPack(settings, onDone) {
+      pendingPack = { settings, onDone };
+      flushPack();
+    }
+
+    function flushPack() {
+      if (packerBusy || !pendingPack) return;
+      packerBusy = true;
+      const { settings, onDone } = pendingPack;
+      pendingPack = null;
+      packer.postMessage({ ...settings, totalTracks: tracks.length });
+      packer.onmessage = ({ data }) => {
+        packerBusy = false;
+        onDone(data.positions);
+        flushPack();
+      };
+    }
+
+    // ── Layout computation ────────────────────────────────────────────────────
+    function beehiveLayout(count, radius, gap) {
+      const r = radius;
+      const dx = r * 2 + gap;
+      const dy = r * Math.sqrt(3) + gap;
+      const pts = [];
+      for (let row = -20; row < 20; row++) {
+        for (let col = -20; col < 20; col++) {
+          const x = CENTER + col * dx + (row % 2 !== 0 ? dx / 2 : 0);
+          const y = CENTER + row * dy;
+          if (x - r >= 0 && x + r <= CANVAS_SIZE && y - r >= 0 && y + r <= CANVAS_SIZE)
+            pts.push({ x, y, r, shape: 'circle', dist: Math.hypot(x - CENTER, y - CENTER) });
+        }
+      }
+      pts.sort((a, b) => a.dist - b.dist);
+      return pts.slice(0, count);
+    }
+
+    function stripsLayout(count, gap) {
+      const n = Math.max(1, Math.min(count, 40));
+      const w = (CANVAS_SIZE - gap * (n - 1)) / n;
+      return Array.from({ length: n }, (_, i) => ({
+        x: i * (w + gap) + w / 2, y: CENTER,
+        w, h: CANVAS_SIZE, r: w / 2, shape: 'rect',
+      }));
+    }
+
+    function gridLayout(count, gap) {
+      const cols = Math.ceil(Math.sqrt(count));
+      const rows = Math.ceil(count / cols);
+      const cw = (CANVAS_SIZE - gap * (cols - 1)) / cols;
+      const ch = (CANVAS_SIZE - gap * (rows - 1)) / rows;
+      const pts = [];
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++) {
+          if (pts.length >= count) break;
+          pts.push({ x: c * (cw + gap) + cw / 2, y: r * (ch + gap) + ch / 2, w: cw, h: ch, r: Math.min(cw, ch) / 2, shape: 'rect' });
+        }
+      return pts;
+    }
+
+    function computeLayout(settings, onDone) {
+      const count = Math.min(settings.maxTracks, tracks.length);
+      if (settings.layout === 'bubble') requestPack(settings, onDone);
+      else if (settings.layout === 'beehive') onDone(beehiveLayout(count, settings.maxRadius, settings.padding));
+      else if (settings.layout === 'strips') onDone(stripsLayout(count, settings.padding));
+      else if (settings.layout === 'grid') onDone(gridLayout(count, settings.padding));
+    }
+
+    // ── Animation ─────────────────────────────────────────────────────────────
+    let loadedImages = [], tracks = [];
+    let selectedBg = 'black', selectedLayout = 'bubble';
+    let rafId = null, state = [], target = [];
+    const SPRING = 0.13;
+
+    function easeOutBack(t) {
+      const c1 = 1.70158, c3 = c1 + 1;
+      return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    }
+
+    function drawShape(s, img, opacity) {
+      if (!s || s.scale <= 0.005 || !img) return;
+      ctx.save();
+      ctx.globalAlpha = opacity * Math.min(1, s.scale);
+      ctx.translate(s.x, s.y);
+      ctx.scale(s.scale, s.scale);
+      if (s.shape === 'rect') {
+        const hw = s.w / 2, hh = s.h / 2;
+        ctx.beginPath(); ctx.rect(-hw, -hh, s.w, s.h); ctx.clip();
+        const size = Math.max(s.w, s.h);
+        ctx.drawImage(img, -size / 2, -size / 2, size, size);
+      } else {
+        ctx.beginPath(); ctx.arc(0, 0, s.r, 0, Math.PI * 2); ctx.clip();
+        ctx.drawImage(img, -s.r, -s.r, s.r * 2, s.r * 2);
+      }
+      ctx.restore();
+    }
+
+    function drawFrame() {
+      const opacity = +document.getElementById('opacity').value / 100;
+      ctx.fillStyle = selectedBg === 'white' ? '#ffffff' : '#0a0a0a';
+      ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      state.forEach((s, i) => drawShape(s, loadedImages[i], opacity));
+    }
+
+    function startLoop() {
+      if (rafId) return;
+      function tick() {
+        let dirty = false;
+        state.forEach((s, i) => {
+          const t = target[i];
+          if (!s || !t) return;
+          const dx = t.x - s.x, dy = t.y - s.y, dr = t.r - s.r, ds = t.scale - s.scale;
+          const dw = (t.w || 0) - (s.w || 0), dh = (t.h || 0) - (s.h || 0);
+          if (Math.abs(dx) + Math.abs(dy) + Math.abs(dr) + Math.abs(ds) + Math.abs(dw) + Math.abs(dh) > 0.3) {
+            s.x += dx * SPRING; s.y += dy * SPRING;
+            s.r += dr * SPRING; s.scale += ds * SPRING;
+            if (t.w) { s.w = (s.w || t.w) + dw * SPRING; s.h = (s.h || t.h) + dh * SPRING; }
+            dirty = true;
+          } else {
+            Object.assign(s, t);
+          }
+        });
+        drawFrame();
+        rafId = dirty ? requestAnimationFrame(tick) : null;
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function applyPositions(positions, settings) {
+      while (state.length < tracks.length) { state.push(null); target.push(null); }
+      tracks.forEach((_, i) => {
+        const pos = positions[i];
+        const fb = state[i] || { x: CENTER, y: CENTER, r: 30, w: 100, h: 100, shape: 'circle', scale: 0 };
+        if (!state[i]) state[i] = { ...fb, scale: 0 };
+        target[i] = pos
+          ? { x: pos.x, y: pos.y, r: pos.r, w: pos.w || pos.r * 2, h: pos.h || pos.r * 2, shape: pos.shape || 'circle', scale: 1 }
+          : { ...fb, scale: 0 };
+      });
+      startLoop();
+    }
+
+    function animateIn(settings) {
+      computeLayout(settings, positions => {
+        while (state.length < tracks.length) { state.push(null); target.push(null); }
+        tracks.forEach((_, i) => {
+          const pos = positions[i];
+          const x = pos ? pos.x : CENTER, y = pos ? pos.y : CENTER;
+          const r = pos ? pos.r : 30;
+          const w = pos ? (pos.w || r * 2) : 60, h = pos ? (pos.h || r * 2) : 60;
+          const shape = pos ? (pos.shape || 'circle') : 'circle';
+          state[i]  = { x, y, r, w, h, shape, scale: 0 };
+          target[i] = { x, y, r, w, h, shape, scale: pos ? 1 : 0 };
+        });
+
+        if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+
+        const STAGGER = 1.5, DURATION = 18;
+        let frame = 0;
+        const opacity = +document.getElementById('opacity').value / 100;
+
+        function step() {
+          ctx.fillStyle = settings.background === 'white' ? '#ffffff' : '#0a0a0a';
+          ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+          positions.forEach((pos, i) => {
+            const img = loadedImages[i];
+            if (!img) return;
+            const t = Math.min(1, Math.max(0, (frame - i * STAGGER) / DURATION));
+            const s = t >= 1 ? 1 : easeOutBack(t);
+            if (s <= 0) return;
+            if (state[i]) state[i].scale = s;
+            ctx.save();
+            ctx.globalAlpha = opacity * Math.min(1, s);
+            ctx.translate(pos.x, pos.y); ctx.scale(s, s);
+            if (pos.shape === 'rect') {
+              const hw = pos.w / 2, hh = pos.h / 2;
+              ctx.beginPath(); ctx.rect(-hw, -hh, pos.w, pos.h); ctx.clip();
+              const size = Math.max(pos.w, pos.h);
+              ctx.drawImage(img, -size / 2, -size / 2, size, size);
+            } else {
+              ctx.beginPath(); ctx.arc(0, 0, pos.r, 0, Math.PI * 2); ctx.clip();
+              ctx.drawImage(img, -pos.r, -pos.r, pos.r * 2, pos.r * 2);
+            }
+            ctx.restore();
+          });
+          frame++;
+          if (frame <= (positions.length - 1) * STAGGER + DURATION) {
+            rafId = requestAnimationFrame(step);
+          } else {
+            rafId = null;
+            tracks.forEach((_, i) => { if (state[i] && target[i]) state[i].scale = target[i].scale; });
+          }
+        }
+        rafId = requestAnimationFrame(step);
+      });
+    }
+
+    function render(popin = false) {
+      const settings = getSettings();
+      if (popin) animateIn(settings);
+      else computeLayout(settings, positions => applyPositions(positions, settings));
+    }
+
+    // ── Control visibility per layout ─────────────────────────────────────────
+    function updateVisibility(layout) {
+      const show = id => document.getElementById(id).classList.remove('hidden');
+      const hide = id => document.getElementById(id).classList.add('hidden');
+      const countLabel = document.getElementById('label-maxTracks');
+
+      show('row-maxTracks'); show('row-maxRadius'); show('row-minRadius'); show('row-padding');
+
+      if (layout === 'bubble') {
+        countLabel.textContent = 'Max. Circles';
+        document.getElementById('maxTracks').max = 300;
+      } else if (layout === 'beehive') {
+        countLabel.textContent = 'Max. Circles';
+        hide('row-minRadius');
+        document.getElementById('maxTracks').max = 300;
+      } else if (layout === 'strips') {
+        countLabel.textContent = 'Strips';
+        hide('row-maxRadius'); hide('row-minRadius');
+        document.getElementById('maxTracks').max = 40;
+        if (+document.getElementById('maxTracks').value > 40)
+          document.getElementById('maxTracks').value = 20;
+      } else if (layout === 'grid') {
+        countLabel.textContent = 'Tiles';
+        hide('row-maxRadius'); hide('row-minRadius');
+        document.getElementById('maxTracks').max = 300;
+      }
+
+      updateFill('maxTracks');
+      document.getElementById('val-maxTracks').textContent = document.getElementById('maxTracks').value;
+      document.getElementById('layout-title').textContent =
+        layout.charAt(0).toUpperCase() + layout.slice(1);
+    }
+
+    // ── Image loading ─────────────────────────────────────────────────────────
+    function loadImage(url) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+    }
+
+    async function loadTracks() {
+      setOverlay(true, 'Loading playlist…');
+      const res = await fetch('/api/tracks');
+      tracks = await res.json();
+      if (tracks.error) throw new Error(tracks.error);
+
+      loadedImages = new Array(tracks.length).fill(null);
+      const BATCH = 20;
+      for (let i = 0; i < tracks.length; i += BATCH) {
+        const loaded = await Promise.all(tracks.slice(i, i + BATCH).map(t => loadImage(t.imageUrl)));
+        loaded.forEach((img, j) => { loadedImages[i + j] = img; });
+        setOverlay(true, `Loading artworks… ${Math.min(i + BATCH, tracks.length)} / ${tracks.length}`);
+      }
+
+      setOverlay(false);
+      render(true);
+      document.getElementById('btn-publish').disabled = false;
+    }
+
+    function setOverlay(show, msg = '') {
+      document.getElementById('overlay-msg').textContent = msg;
+      document.getElementById('overlay').classList.toggle('hidden', !show);
+    }
+
+    // ── Slider wiring ─────────────────────────────────────────────────────────
+    ['maxTracks', 'maxRadius', 'minRadius', 'padding'].forEach(id => {
+      const input = document.getElementById(id);
+      input.addEventListener('input', () => {
+        document.getElementById('val-' + id).textContent = input.value;
+        updateFill(id);
+        render(false);
+      });
+    });
+
+    document.getElementById('opacity').addEventListener('input', function() {
+      document.getElementById('val-opacity').textContent = this.value;
+      updateFill('opacity');
+      drawFrame();
+    });
+
+    const dropdownWrap = document.getElementById('layout-dropdown-wrap');
+    document.getElementById('layout-dropdown-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      dropdownWrap.classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => dropdownWrap.classList.remove('open'));
+
+    document.querySelectorAll('.layout-option').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        selectedLayout = btn.dataset.layout;
+        dropdownWrap.classList.remove('open');
+        updateVisibility(selectedLayout);
+        render(true);
+      });
+    });
+
+    document.querySelectorAll('#bg-pills .bg-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#bg-pills .bg-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedBg = btn.dataset.bg;
+        drawFrame();
+      });
+    });
+
+    function getSettings() {
+      return {
+        layout:     selectedLayout,
+        maxTracks:  +document.getElementById('maxTracks').value,
+        maxRadius:  +document.getElementById('maxRadius').value,
+        minRadius:  +document.getElementById('minRadius').value,
+        padding:    +document.getElementById('padding').value,
+        background: selectedBg,
+        opacity:    +document.getElementById('opacity').value / 100,
+      };
+    }
+
+    // ── Push to Spotify ───────────────────────────────────────────────────────
+    function setStatus(msg, type = '') {
+      const el = document.getElementById('status');
+      el.className = 'status ' + type;
+      el.innerHTML = msg;
+    }
+
+    document.getElementById('btn-publish').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-publish');
+      btn.disabled = true;
+      setStatus('<span class="spinner"></span>Pushing…');
+      try {
+        const res = await fetch('/api/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(getSettings()),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        setStatus('Updated ✓', 'ok');
+      } catch (err) {
+        setStatus(err.message, 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('btn-reload').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-reload');
+      btn.disabled = true;
+      try {
+        await fetch('/api/reload', { method: 'POST' });
+        loadedImages = []; tracks = []; state = []; target = [];
+        await loadTracks();
+      } catch (err) {
+        setStatus(err.message, 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    updateVisibility('bubble');
+    loadTracks().catch(err => {
+      setOverlay(false);
+      setStatus(err.message, 'err');
+    });
+  </script>
+</body>
+</html>
