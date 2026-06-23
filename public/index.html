@@ -11,7 +11,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #000000;
+      background: #282828;
       color: #fff;
       font-family: 'Inter', system-ui, sans-serif;
       height: 100vh;
@@ -23,28 +23,557 @@
     .canvas-wrap {
       position: fixed;
       top: 0;
-      left: 292px;
+      left: 0;
       right: 0;
       bottom: 0;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      pointer-events: all;
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .canvas-wrap.dragging { cursor: grabbing; }
+
+    /* ── View toggle (in panel header) ── */
+    .view-toggle {
+      display: flex;
+      gap: 2px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 100px;
+      padding: 2px;
+    }
+
+    .view-btn {
+      padding: 3px 10px;
+      border-radius: 100px;
+      border: none;
+      background: transparent;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.3);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .view-btn.active {
+      background: rgba(255,255,255,0.09);
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* ── Cover-mode dim overlay ── */
+    .sp-chrome-dim {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 1);
       pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      z-index: 50;
+    }
+    .spotify-preview.cover-mode .sp-chrome-dim { opacity: 1; }
+
+    /* Canvas floated above the dim overlay, pinned to cover slot coordinates */
+    .sp-canvas-float {
+      position: absolute;
+      left: 426px;
+      top: 104px;
+      width: 232px;
+      height: 232px;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: rgba(0,0,0,0.5) 0px 4px 60px;
+      background: #252525;
+      z-index: 51;
+      pointer-events: none;
+    }
+    .sp-canvas-float canvas { width: 100%; height: 100%; display: block; }
+
+    /* ── Spotify preview — exact Paper artboard: 1506×1159 ── */
+    .spotify-preview {
+      display: flex;
+      width: 1506px;
+      height: 1159px;
+      border-radius: 8px;
+      border: 1px solid #FFFFFF12;
+      overflow: hidden;
+      background: #000000;
+      flex-direction: column;
+      flex-shrink: 0;
+      will-change: transform;
+    }
+
+    .spotify-preview.view-transitioning {
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Top nav — bg #000000, height 64px */
+    .sp-nav {
+      display: flex;
+      align-items: center;
+      height: 64px;
+      flex-shrink: 0;
+      background: #000000;
+      position: relative;
+      padding: 0 8px 0 24px;
+    }
+
+    /* Home icon button */
+    .sp-home-btn {
+      width: 48px; height: 48px;
+      background: #1F1F1F;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Search bar — bg #1F1F1F, border-radius 500px, height 48px */
+    .sp-search-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8px;
+    }
+
+    .sp-search-bar {
+      display: flex;
+      align-items: center;
+      background: #1F1F1F;
+      border-radius: 500px;
+      height: 48px;
+      padding: 12px 12px 12px 48px;
+      width: 474px;
+      position: relative;
+      max-width: 100%;
+    }
+
+    .sp-search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .sp-search-bar span {
+      font-size: 16px;
+      line-height: 20px;
+      color: #B3B3B3;
+      font-family: system-ui, sans-serif;
+    }
+
+    /* Nav right actions */
+    .sp-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .sp-install-btn {
+      font-size: 14px;
+      font-weight: 700;
+      color: #B3B3B3;
+      font-family: system-ui, sans-serif;
+      background: transparent;
+      border: none;
+      padding: 4px 16px 4px 36px;
+      cursor: default;
+      position: relative;
+      min-height: 32px;
+      display: flex; align-items: center;
+    }
+
+    .sp-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: #DDD;
+      flex-shrink: 0;
+    }
+
+    /* Body (sidebar + main) */
+    .sp-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      gap: 8px;
+      padding: 0 8px 8px;
+    }
+
+    /* Sidebar — 386px, bg #121212 */
+    .sp-sidebar {
+      width: 386px;
+      flex-shrink: 0;
+      background: #121212;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* "Your Library" header */
+    .sp-lib-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 16px 8px;
+    }
+
+    .sp-lib-title {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #FFFFFF;
+      font-family: system-ui, sans-serif;
+    }
+
+    /* Tab pills — bg #FFFFFF1A, border-radius 9999px, height 32px */
+    .sp-lib-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 8px 16px;
+    }
+
+    .sp-lib-tab {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 14px;
+      color: #FFFFFF;
+      font-family: system-ui, sans-serif;
+      background: rgba(255,255,255,0.102); /* #FFFFFF1A */
+      border-radius: 9999px;
+      padding: 4px 12px;
+      height: 32px;
+      display: flex; align-items: center;
+    }
+
+    /* Sort bar row */
+    .sp-lib-sort {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 34px;
+      padding-right: 16px;
+      padding-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .sp-lib-sort-search {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 16px;
+      padding: 8px;
+    }
+
+    .sp-lib-sort-recents {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #B3B3B3;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      line-height: 18px;
+    }
+
+    /* Library list — paddingInline 8px, no gap between items */
+    .sp-lib-list {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 0 8px 8px;
+    }
+
+    /* Library item — height 64px, position relative */
+    .sp-lib-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: default;
+      height: 64px;
+      flex-shrink: 0;
+    }
+
+    /* Thumbnail — 48×48, border-radius 4px */
+    .sp-lib-thumb {
+      width: 48px; height: 48px;
+      border-radius: 4px;
+      background: #252525;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .sp-lib-thumb.round { border-radius: 50%; }
+
+    .sp-lib-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+    /* Name — 16px/400/white */
+    .sp-lib-name {
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 20px;
+      color: #FFFFFF;
+      font-family: system-ui, sans-serif;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Subtitle — 14px/#B3B3B3 */
+    .sp-lib-sub {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 18px;
+      color: #B3B3B3;
+      font-family: system-ui, sans-serif;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Main content — bg #121212 */
+    .sp-main {
+      flex: 1;
+      background: #121212;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Playlist header — bg #650000 with gradient, min-height 276px, cover at top */
+    .sp-playlist-header {
+      flex-shrink: 0;
+      background-color: #650000;
+      background-image: linear-gradient(180deg,
+        rgba(101,0,0,0.95) 0%,
+        rgba(90,0,0,0.88) 15%,
+        rgba(75,0,0,0.75) 30%,
+        rgba(55,0,0,0.55) 50%,
+        rgba(35,0,0,0.30) 70%,
+        rgba(18,18,18,0) 100%
+      );
+      padding-inline: 24px;
+      padding-top: 40px;
+      padding-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      min-height: 276px;
+      max-height: 336px;
+    }
+
+    /* Cover slot — 232×232px, border-radius 4px */
+    .sp-cover-slot {
+      width: 232px; height: 232px;
+      border-radius: 4px;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: rgba(0,0,0,0.5) 0px 4px 60px;
+      background: #252525;
+    }
+
+    .sp-cover-slot { background: transparent; }
+
+    .sp-playlist-meta {
+      display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; min-width: 0; padding-bottom: 4px; flex: 1; align-self: stretch;
+    }
+
+    /* "Public Playlist" — 14px/400/white */
+    .sp-playlist-type {
+      font-size: 14px; font-weight: 400; line-height: 18px;
+      color: #FFFFFF; font-family: system-ui, sans-serif;
+    }
+
+    /* Playlist title — 72px/800/white, line-height 88px */
+    .sp-playlist-name {
+      font-size: 72px; font-weight: 800; line-height: 88px;
+      color: #FFFFFF; font-family: system-ui, sans-serif;
+      white-space: nowrap;
+    }
+
+    /* Metadata — 14px/#FFFFFFB3 */
+    .sp-playlist-info {
+      font-size: 14px; font-weight: 400; line-height: 18px;
+      color: rgba(255,255,255,0.7); font-family: system-ui, sans-serif;
+    }
+
+    .sp-playlist-info strong {
+      font-weight: 700; color: #FFFFFF;
+    }
+
+    /* Controls row — padding 24px, height 104px */
+    .sp-controls {
+      display: flex; align-items: center; gap: 16px;
+      padding: 24px; height: 104px; flex-shrink: 0;
+      background: #121212;
+    }
+
+    /* Play button — 56×56px, #1ED760 */
+    .sp-play-btn {
+      width: 56px; height: 56px;
+      border-radius: 9999px;
+      background: #1ED760;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sp-ctrl-icon {
+      width: 20px; height: 20px;
+      color: #B3B3B3;
+      flex-shrink: 0;
+    }
+
+    .sp-mix-btn {
+      display: flex; align-items: center; gap: 6px;
+      border: 1px solid rgba(255,255,255,0.3); border-radius: 9999px;
+      padding: 5px 14px; font-size: 14px; font-weight: 600;
+      color: #fff; font-family: system-ui, sans-serif;
+    }
+
+    /* Track list — no padding, rows handle their own spacing */
+    .sp-tracklist { flex: 1; overflow: hidden; }
+    .sp-track-rows { padding-top: 16px; }
+
+    /* Track header — 36px, columns absolutely positioned */
+    .sp-track-header {
+      position: relative;
+      height: 36px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 0;
+    }
+
+    .sp-track-header .th-num {
+      position: absolute; left: 16px; top: 0;
+      width: 16px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: #B3B3B3; font-family: system-ui, sans-serif;
+    }
+
+    .sp-track-header .th-title {
+      position: absolute; left: 48px; top: 0;
+      width: 403px; height: 36px;
+      display: flex; align-items: center;
+      font-size: 14px; color: #B3B3B3; font-family: system-ui, sans-serif;
+    }
+
+    .sp-track-header .th-album {
+      position: absolute; left: 467px; top: 0;
+      width: 201px; height: 36px;
+      display: flex; align-items: center;
+      font-size: 14px; color: #B3B3B3; font-family: system-ui, sans-serif;
+    }
+
+    .sp-track-header .th-date {
+      position: absolute; left: 685px; top: 0;
+      width: 201px; height: 36px;
+      display: flex; align-items: center;
+      font-size: 14px; color: #B3B3B3; font-family: system-ui, sans-serif;
+    }
+
+    .sp-track-header .th-dur {
+      position: absolute; left: 903px; top: 0;
+      width: 120px; height: 36px;
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-right: 12px;
+    }
+
+    /* Track row — 56px, columns absolutely positioned to match Paper exactly */
+    .sp-track-row {
+      position: relative;
+      height: 56px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+
+    /* # number — left:16, top:19, 16×16 */
+    .sp-track-num {
+      position: absolute;
+      left: 16px; top: 19px;
+      width: 16px; height: 16px;
+      font-size: 16px; line-height: 20px;
+      color: #B3B3B3; font-family: system-ui, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Title cell — left:48, top:1, 403×54 */
+    .sp-track-info {
+      position: absolute;
+      left: 48px; top: 1px;
+      width: 403px; height: 54px;
+      display: flex; align-items: center;
+    }
+
+    /* Track thumbnail — 40×40, borderRadius 4px, paddingRight 12px wrapper */
+    .sp-track-thumb {
+      width: 40px; height: 40px;
+      border-radius: 4px;
+      background: #282828;
+      flex-shrink: 0;
+      margin-right: 12px;
+    }
+
+    .sp-track-text { display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+
+    .sp-track-name {
+      font-size: 16px; font-weight: 400; line-height: 20px;
+      color: #FFFFFF; font-family: system-ui, sans-serif;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .sp-track-artist {
+      font-size: 14px; font-weight: 400; line-height: 18px;
+      color: #B3B3B3; font-family: system-ui, sans-serif;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    /* Album — left:467, top:1, 201×54 */
+    .sp-track-album {
+      position: absolute;
+      left: 467px; top: 1px;
+      width: 201px; height: 54px;
+      display: flex; align-items: center;
+      font-size: 14px; color: #B3B3B3; font-family: system-ui, sans-serif;
+      white-space: nowrap; overflow: hidden;
+    }
+
+    /* Date — left:684, top:1, 201×54 */
+    .sp-track-date {
+      position: absolute;
+      left: 684px; top: 1px;
+      width: 201px; height: 54px;
+      display: flex; align-items: center;
+      font-size: 14px; color: #B3B3B3; font-family: system-ui, sans-serif;
+      white-space: nowrap; overflow: hidden;
+    }
+
+    /* Duration — left:901, top:1, 120×54, right-aligned with paddingRight:12 */
+    .sp-track-dur {
+      position: absolute;
+      left: 901px; top: 1px;
+      width: 120px; height: 54px;
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-right: 12px;
+      font-size: 14px; color: #B3B3B3; font-family: system-ui, sans-serif;
     }
 
     canvas {
-      width: 460px;
-      height: 460px;
-      border-radius: 10px;
       display: block;
+      will-change: transform;
     }
 
     .loading-overlay {
-      position: absolute;
-      width: 460px;
-      height: 460px;
-      border-radius: 10px;
-      background: #141414;
+      position: fixed;
+      left: 0; right: 0; top: 0; bottom: 0;
+      background: #282828;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -54,6 +583,7 @@
       font-size: 12px;
       transition: opacity 0.4s;
       pointer-events: all;
+      z-index: 10;
     }
 
     .loading-overlay.hidden { opacity: 0; pointer-events: none; }
@@ -85,7 +615,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 12px 8px 12px;
+      padding: 10px 12px;
       background: #161616;
     }
 
@@ -223,7 +753,7 @@
       position: relative;
       background: #1D1D1D;
       overflow: hidden;
-      cursor: pointer;
+      cursor: ew-resize;
     }
 
     .slider-fill {
@@ -241,7 +771,7 @@
       width: 100%;
       height: 100%;
       opacity: 0;
-      cursor: pointer;
+      cursor: ew-resize;
       margin: 0;
       -webkit-appearance: none;
     }
@@ -296,6 +826,27 @@
       height: 46px;
       flex-shrink: 0;
     }
+
+    .export-row {
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn-export {
+      flex: 1;
+      height: 30px;
+      border-radius: 100px;
+      border: none;
+      background: #1D1D1D;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-export:hover { background: #242424; color: rgba(255,255,255,0.7); }
 
     .btn-push {
       flex: 1;
@@ -368,11 +919,321 @@
 
   <!-- Centered canvas -->
   <div class="canvas-wrap">
-    <canvas id="canvas" width="1000" height="1000"></canvas>
-    <div class="loading-overlay" id="overlay">
-      <div class="big-spinner"></div>
-      <span id="overlay-msg">Loading playlist…</span>
+
+    <!-- Cover view -->
+<!-- Spotify preview — 1395×984 from Paper, always visible, zoom level changes per view -->
+    <div class="spotify-preview cover-mode" id="spotify-preview">
+
+      <!-- Dim overlay covers all chrome in cover mode (z-index 50) -->
+      <div class="sp-chrome-dim"></div>
+
+      <!-- Canvas lives here as an absolute sibling above the dim overlay (z-index 51) -->
+      <!-- Position: left=320 (sidebar 280+gap 8+padding 24+body-pad 8), top=103 (64nav+295header-24pb-232h) -->
+      <div class="sp-canvas-float" id="sp-canvas-float">
+        <canvas id="canvas" width="1000" height="1000"></canvas>
+      </div>
+
+      <!-- Top nav: bg #000000, height 64px, paddingLeft 24px paddingRight 8px -->
+      <div class="sp-nav">
+        <!-- Spotify logo: 104×32, left section 261px wide -->
+        <div style="width:261px;flex-shrink:0;display:flex;align-items:flex-start;">
+          <svg xmlns="http://www.w3.org/2000/svg" height="32" width="104" viewBox="495.794 86.254 62.923 10.049" style="flex-shrink:0"><path d="M505.483 81.624C500.3 81.624 496.099 85.864 496.099 91.094c0 5.23 4.201 9.469 9.384 9.469 5.183 0 9.384-4.239 9.384-9.469 0-5.229-4.201-9.469-9.384-9.469z m4.303 13.657a0.59 0.584 90 0 1-0.804 0.196c-2.203-1.358-4.977-1.666-8.244-0.912a0.591 0.585 90 0 1-0.7-0.445 0.589 0.584 90 0 1 0.44-0.707c3.575-0.824 6.641-0.469 9.114 1.056 0.275 0.171 0.363 0.534 0.194 0.812z m1.149-2.578c-0.212 0.347-0.662 0.457-1.006 0.244-2.523-1.565-6.368-2.018-9.351-1.104-0.387 0.118-0.795-0.102-0.913-0.493a0.739 0.733 90 0 1 0.487-0.92c3.408-1.044 7.645-0.538 10.542 1.258 0.344 0.214 0.453 0.668 0.241 1.015z m0.098-2.685c-3.025-1.813-8.014-1.979-10.902-1.095-0.464 0.142-0.954-0.123-1.094-0.59a0.886 0.878 90 0 1 0.584-1.105c3.315-1.015 8.825-0.82 12.308 1.267a0.884 0.877 90 0 1 0.307 1.213c-0.246 0.421-0.787 0.56-1.202 0.31z m10.597 0.347c-1.621-0.39-1.908-0.663-1.909-1.238 0-0.543 0.507-0.908 1.261-0.909 0.73 0 1.454 0.278 2.214 0.85 0.023 0.017 0.052 0.024 0.08 0.019a0.105 0.104 90 0 0 0.071-0.044l0.79-1.125a0.108 0.107 90 0 0-0.02-0.145c-0.904-0.732-1.922-1.088-3.112-1.088-1.749 0-2.972 1.059-2.971 2.575 0 1.626 1.054 2.201 2.876 2.645 1.55 0.361 1.812 0.663 1.812 1.202 0 0.598-0.529 0.97-1.38 0.97-0.946 0-1.718-0.322-2.581-1.075a0.111 0.11 90 0 0-0.078-0.027c-0.029 0.002-0.055 0.016-0.073 0.038l-0.887 1.065c-0.037 0.045-0.032 0.111 0.01 0.149 1.004 0.905 2.239 1.381 3.573 1.383 1.885 0 3.103-1.039 3.103-2.649 0.003-1.358-0.802-2.11-2.776-2.594z m7.043-1.612c-0.817 0-1.487 0.325-2.04 0.99v-0.749a0.107 0.106 90 0 0-0.106-0.107h-1.451c-0.058 0-0.105 0.048-0.105 0.107v8.323c0 0.059 0.047 0.108 0.105 0.107h1.451c0.058 0 0.105-0.048 0.106-0.107v-2.627c0.554 0.625 1.224 0.932 2.04 0.932 1.519 0 3.056-1.179 3.057-3.434 0.002-2.255-1.535-3.435-3.056-3.435z m1.368 3.435c0 1.147-0.7 1.95-1.704 1.949-0.991 0-1.741-0.838-1.74-1.949 0-1.111 0.748-1.949 1.74-1.95 0.988 0 1.705 0.82 1.704 1.95z m5.627-3.435c-1.956 0-3.487 1.52-3.487 3.459 0 1.919 1.522 3.422 3.463 3.422 1.962 0 3.498-1.514 3.499-3.446 0-1.925-1.526-3.434-3.475-3.435z m0 5.396c-1.04 0-1.825-0.844-1.825-1.962 0-1.122 0.758-1.937 1.801-1.937 1.046 0 1.836 0.843 1.836 1.961 0 1.122-0.762 1.936-1.812 1.938z m7.65-5.262h-1.597V87.24a0.107 0.106 90 0 0-0.105-0.107h-1.451c-0.058 0-0.107 0.048-0.107 0.107V88.887h-0.696c-0.058 0-0.105 0.048-0.106 0.107v1.258c0 0.059 0.047 0.107 0.106 0.108h0.696v3.255c0 1.315 0.649 1.982 1.93 1.983 0.52 0 0.951-0.108 1.359-0.341 0.034-0.018 0.054-0.055 0.053-0.093v-1.199c0-0.036-0.019-0.071-0.05-0.09a0.104 0.103 90 0 0-0.103-0.005c-0.279 0.141-0.549 0.207-0.852 0.207-0.465 0-0.674-0.214-0.674-0.691V90.36h1.597c0.058 0 0.105-0.048 0.105-0.107V88.995a0.104 0.103 90 0 0-0.104-0.107z m5.563 0.006v-0.202c0-0.595 0.227-0.861 0.733-0.861 0.303 0 0.546 0.061 0.818 0.153 0.034 0.011 0.068 0.005 0.095-0.015a0.106 0.105 90 0 0 0.044-0.087v-1.234a0.106 0.105 90 0 0-0.075-0.103c-0.287-0.087-0.654-0.175-1.206-0.175-1.339 0-2.048 0.762-2.049 2.202v0.31h-0.696c-0.058 0-0.107 0.048-0.107 0.107v1.264c0 0.059 0.048 0.107 0.107 0.108h0.696v5.021c0 0.06 0.048 0.108 0.107 0.108h1.45c0.06 0 0.107-0.048 0.106-0.108V90.36h1.356l2.074 5.021c-0.235 0.527-0.468 0.632-0.783 0.632-0.256 0-0.526-0.077-0.8-0.229a0.116 0.115 90 0 0-0.084-0.008c-0.028 0.01-0.052 0.03-0.062 0.057l-0.493 1.089c-0.024 0.052-0.003 0.112 0.046 0.139 0.513 0.28 0.976 0.4 1.549 0.401 1.071 0 1.664-0.504 2.185-1.859l2.517-6.563a0.105 0.104 90 0 0-0.012-0.1 0.105 0.104 90 0 0-0.086-0.047h-1.51c-0.046 0-0.086 0.029-0.101 0.073l-1.548 4.459-1.694-4.462a0.107 0.106 90 0 0-0.099-0.07h-2.478z m-3.225-0.006h-1.451c-0.058 0-0.107 0.048-0.107 0.107v6.387c0 0.06 0.048 0.108 0.107 0.108h1.451c0.058 0 0.107-0.048 0.107-0.108V88.995a0.107 0.106 90 0 0-0.107-0.108z m-0.717-2.908c-0.575 0-1.041 0.47-1.041 1.049a1.051 1.041 90 0 0 1.041 1.051c0.575 0 1.04-0.47 1.039-1.051 0-0.58-0.466-1.05-1.039-1.049z m12.71 4.962c-0.573 0-1.021-0.465-1.022-1.031s0.453-1.036 1.027-1.035 1.021 0.465 1.021 1.029c0 0.565-0.453 1.036-1.026 1.037z m0.005-1.964c-0.523 0-0.919 0.419-0.919 0.933 0 0.514 0.393 0.927 0.914 0.928 0.523 0 0.919-0.419 0.918-0.934 0-0.514-0.393-0.927-0.913-0.927z m0.226 1.033l0.289 0.409h-0.244l-0.26-0.375h-0.223v0.375h-0.204v-1.082h0.477c0.25 0 0.413 0.129 0.414 0.345 0.001 0.177-0.101 0.286-0.247 0.328z m-0.173-0.487h-0.265v0.341h0.265c0.133 0 0.212-0.066 0.212-0.171 0-0.112-0.079-0.171-0.212-0.17z" fill="#FFFFFF"/></svg>
+        </div>
+        <!-- Center: home button + search bar -->
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+          <div style="display:flex;align-items:flex-start;min-width:350px;max-width:546px;width:546px;">
+            <!-- Home button: 48×48, bg #1F1F1F, border-radius 24px, padding 12px -->
+            <div style="align-self:stretch;padding-left:8px;display:flex;">
+              <div style="width:48px;height:48px;background:#1F1F1F;border-radius:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <div style="width:24px;height:24px;overflow:hidden;position:relative;flex-shrink:0;">
+                  <svg viewBox="0 0 20 20.89" width="20" height="20.89" xmlns="http://www.w3.org/2000/svg" style="position:absolute;left:8.33%;top:4.64%;overflow:visible;"><path d="M10.500 2.134C10.348 2.046 10.176 2.000 10.000 2.000C9.824 2.000 9.652 2.046 9.500 2.134C9.500 2.134 2.000 6.464 2.000 6.464C2.000 6.464 2.000 18.887 2.000 18.887C2.000 18.887 6.500 18.887 6.500 18.887C6.500 18.887 6.500 12.887 6.500 12.887C6.500 12.622 6.605 12.367 6.793 12.180C6.980 11.992 7.235 11.887 7.500 11.887C7.500 11.887 12.500 11.887 12.500 11.887C12.765 11.887 13.020 11.992 13.207 12.180C13.395 12.367 13.500 12.622 13.500 12.887C13.500 12.887 13.500 18.887 13.500 18.887C13.500 18.887 18.000 18.887 18.000 18.887C18.000 18.887 18.000 6.464 18.000 6.464C18.000 6.464 10.500 2.134 10.500 2.134ZM8.500 0.402C8.956 0.139 9.473 -0.000 10.000 0.000C10.527 0.000 11.044 0.139 11.500 0.402C11.500 0.402 19.000 4.732 19.000 4.732C19.304 4.907 19.557 5.160 19.732 5.464C19.908 5.768 20.000 6.113 20.000 6.464C20.000 6.464 20.000 19.887 20.000 19.887C20.000 20.152 19.895 20.406 19.707 20.594C19.520 20.782 19.265 20.887 19.000 20.887C19.000 20.887 12.500 20.887 12.500 20.887C12.235 20.887 11.980 20.782 11.793 20.594C11.605 20.406 11.500 20.152 11.500 19.887C11.500 19.887 11.500 13.887 11.500 13.887C11.500 13.887 8.500 13.887 8.500 13.887C8.500 13.887 8.500 19.887 8.500 19.887C8.500 20.152 8.395 20.406 8.207 20.594C8.020 20.782 7.765 20.887 7.500 20.887C7.500 20.887 1.000 20.887 1.000 20.887C0.735 20.887 0.480 20.782 0.293 20.594C0.105 20.406 0.000 20.152 0.000 19.887C0.000 19.887 0.000 6.464 0.000 6.464C0.000 6.113 0.092 5.768 0.268 5.464C0.443 5.160 0.696 4.907 1.000 4.732C1.000 4.732 8.500 0.402 8.500 0.402Z" fill-rule="nonzero" fill="#B3B3B3"/></svg>
+                </div>
+              </div>
+            </div>
+            <!-- Search bar: 490×48, bg #1F1F1F, border-radius 500px, paddingLeft 48px paddingRight 96px -->
+            <div style="padding-inline:8px;display:flex;flex-direction:column;flex-shrink:0;position:relative;width:490px;">
+              <div style="background:#1F1F1F;border-radius:500px;height:48px;overflow:hidden;padding:12px 96px 12px 48px;width:474px;display:flex;align-items:center;">
+                <span style="font-size:16px;line-height:20px;color:#B3B3B3;font-family:system-ui,sans-serif;">What do you want to play?</span>
+              </div>
+              <!-- Search icon: absolute left:8, 24×24 -->
+              <div style="position:absolute;left:20px;top:0;width:48px;height:48px;display:flex;align-items:center;justify-content:center;">
+                <div style="width:24px;height:24px;overflow:hidden;position:relative;">
+                  <svg viewBox="0 0 21.37 21.15" width="21.37" height="21.15" xmlns="http://www.w3.org/2000/svg" style="position:absolute;left:5.42%;top:5.94%;overflow:visible;"><path d="M9.407 0.000C4.226 0.000 0.000 4.140 0.000 9.279C0.000 14.418 4.226 18.558 9.407 18.558C11.641 18.558 13.698 17.788 15.314 16.500C15.314 16.500 19.667 20.853 19.667 20.853C20.057 21.244 20.691 21.244 21.081 20.853C21.472 20.463 21.472 19.829 21.081 19.439C21.081 19.439 16.737 15.095 16.737 15.095C18.036 13.506 18.814 11.484 18.814 9.279C18.814 4.140 14.588 0.000 9.407 0.000ZM2.000 9.279C2.000 5.273 5.302 2.000 9.407 2.000C13.512 2.000 16.814 5.273 16.814 9.279C16.814 13.285 13.512 16.558 9.407 16.558C5.302 16.558 2.000 13.285 2.000 9.279Z" fill-rule="nonzero" fill="#B3B3B3"/></svg>
+                </div>
+              </div>
+              <!-- Browse icon + divider: absolute right -->
+              <div style="position:absolute;right:20px;top:11.5px;height:25px;border-left:1px solid #7C7C7C;display:flex;align-items:center;padding-left:12px;">
+                <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;border-radius:9999px;"><g><g><path transform="matrix(1 0 0 1 9 13.5)" d="M6.000 2.000C6.000 3.105 4.657 4.000 3.000 4.000C1.343 4.000 0.000 3.105 0.000 2.000C0.000 0.895 1.343 0.000 3.000 0.000C4.657 0.000 6.000 0.895 6.000 2.000Z" fill-rule="nonzero" fill="#B3B3B3"/><path transform="matrix(1 0 0 1 1.291 1)" d="M0.222 8.370C0.316 8.254 0.434 8.161 0.569 8.097C0.704 8.033 0.851 8.000 1.000 8.000C1.000 8.000 20.418 8.000 20.418 8.000C20.567 8.000 20.714 8.033 20.849 8.097C20.983 8.161 21.102 8.255 21.196 8.370C21.289 8.486 21.356 8.621 21.391 8.766C21.426 8.911 21.428 9.062 21.397 9.208C21.397 9.208 19.058 20.208 19.058 20.208C19.010 20.432 18.887 20.633 18.709 20.777C18.531 20.921 18.309 21.000 18.080 21.000C18.080 21.000 3.339 21.000 3.339 21.000C3.110 21.000 2.888 20.921 2.710 20.777C2.532 20.633 2.408 20.432 2.361 20.208C2.361 20.208 0.022 9.208 0.022 9.208C-0.009 9.062 -0.007 8.912 0.028 8.767C0.062 8.622 0.129 8.487 0.223 8.371ZM2.234 10.000C2.234 10.000 4.147 19.000 4.147 19.000C4.147 19.000 17.270 19.000 17.270 19.000C17.270 19.000 19.183 10.000 19.183 10.000ZM2.709 1.000C2.709 0.735 2.814 0.480 3.002 0.293C3.189 0.105 3.444 0.000 3.709 0.000C3.709 0.000 17.709 0.000 17.709 0.000C17.974 0.000 18.228 0.105 18.416 0.293C18.603 0.480 18.709 0.735 18.709 1.000C18.709 1.000 18.709 5.000 18.709 5.000C18.709 5.000 16.709 5.000 16.709 5.000C16.709 5.000 16.709 2.000 16.709 2.000C16.709 2.000 4.709 2.000 4.709 2.000C4.709 2.000 4.709 5.000 4.709 5.000C4.709 5.000 2.709 5.000 2.709 5.000Z" fill-rule="nonzero" fill="#B3B3B3"/></g></g></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Right actions: Install App, notification, friends, avatar -->
+        <div class="sp-nav-actions">
+          <!-- Install App: text + download icon left:12 -->
+          <div style="position:relative;display:flex;align-items:center;min-height:32px;padding:4px 16px 4px 36px;border-radius:9999px;">
+            <span style="font-size:14px;font-weight:700;color:#B3B3B3;font-family:system-ui,sans-serif;">Install App</span>
+            <div style="position:absolute;left:12px;top:8px;width:16px;height:16px;overflow:hidden;">
+              <svg viewBox="0 0 16 16" width="16" height="16" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;"><path transform="matrix(1 0 0 1 4.776 3.25)" d="M0.219 5.495C0.360 5.355 0.551 5.276 0.749 5.276C0.948 5.276 1.139 5.355 1.279 5.495C1.279 5.495 2.474 6.689 2.474 6.689C2.474 6.689 2.474 0.750 2.474 0.750C2.474 0.551 2.553 0.360 2.694 0.220C2.835 0.079 3.025 0.000 3.224 0.000C3.423 0.000 3.614 0.079 3.755 0.220C3.895 0.360 3.974 0.551 3.974 0.750C3.974 0.750 3.974 6.690 3.974 6.690C3.974 6.690 5.169 5.495 5.169 5.495C5.238 5.421 5.321 5.362 5.413 5.321C5.505 5.280 5.604 5.258 5.705 5.256C5.806 5.255 5.906 5.273 5.999 5.311C6.092 5.349 6.177 5.405 6.248 5.476C6.320 5.547 6.376 5.632 6.413 5.725C6.451 5.819 6.470 5.919 6.468 6.020C6.466 6.120 6.444 6.220 6.403 6.312C6.362 6.404 6.303 6.486 6.229 6.555C6.229 6.555 3.224 9.561 3.224 9.561C3.224 9.561 2.696 9.033 2.696 9.033C2.691 9.028 2.691 9.028 2.691 9.028C2.691 9.028 0.219 6.555 0.219 6.555C0.079 6.414 0.000 6.224 0.000 6.025C0.000 5.826 0.079 5.636 0.219 5.495Z" fill-rule="nonzero" fill="#B3B3B3"/><path d="M0.000 8.000C0.000 5.878 0.843 3.843 2.343 2.343C3.843 0.843 5.878 0.000 8.000 0.000C10.122 0.000 12.157 0.843 13.657 2.343C15.157 3.843 16.000 5.878 16.000 8.000C16.000 10.122 15.157 12.157 13.657 13.657C12.157 15.157 10.122 16.000 8.000 16.000C5.878 16.000 3.843 15.157 2.343 13.657C0.843 12.157 0.000 10.122 0.000 8.000ZM8.000 1.500C6.276 1.500 4.623 2.185 3.404 3.404C2.185 4.623 1.500 6.276 1.500 8.000C1.500 9.724 2.185 11.377 3.404 12.596C4.623 13.815 6.276 14.500 8.000 14.500C9.724 14.500 11.377 13.815 12.596 12.596C13.815 11.377 14.500 9.724 14.500 8.000C14.500 6.276 13.815 4.623 12.596 3.404C11.377 2.185 9.724 1.500 8.000 1.500Z" fill-rule="nonzero" fill="#B3B3B3"/></svg>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding-left:8px;">
+            <!-- Notification bell: 32×32 button, 16×16 icon -->
+            <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:9999px;flex-shrink:0;">
+              <div style="width:16px;height:16px;overflow:hidden;position:relative;flex-shrink:0;">
+                <svg viewBox="0 0 15.59 16" width="15.59" height="16" xmlns="http://www.w3.org/2000/svg" style="position:absolute;left:1.29%;top:0%;overflow:visible;"><path d="M7.793 1.500C6.732 1.500 5.715 1.921 4.964 2.672C4.214 3.422 3.793 4.439 3.793 5.500C3.793 5.500 3.793 8.770 3.793 8.770C3.793 8.901 3.758 9.030 3.693 9.143C3.693 9.143 2.048 12.000 2.048 12.000C2.048 12.000 13.538 12.000 13.538 12.000C13.538 12.000 11.893 9.142 11.893 9.142C11.827 9.028 11.793 8.899 11.793 8.768C11.793 8.768 11.793 5.500 11.793 5.500C11.793 4.439 11.371 3.422 10.621 2.672C9.871 1.921 8.854 1.500 7.793 1.500ZM2.293 5.500C2.293 4.041 2.872 2.642 3.904 1.611C4.935 0.579 6.334 0.000 7.793 0.000C9.252 0.000 10.651 0.579 11.682 1.611C12.713 2.642 13.293 4.041 13.293 5.500C13.293 5.500 13.293 8.567 13.293 8.567C13.293 8.567 15.486 12.376 15.486 12.376C15.552 12.490 15.586 12.619 15.586 12.751C15.586 12.882 15.551 13.012 15.485 13.125C15.419 13.239 15.325 13.334 15.211 13.400C15.097 13.465 14.967 13.500 14.836 13.500C14.836 13.500 10.293 13.500 10.293 13.500C10.293 14.163 10.030 14.799 9.561 15.268C9.092 15.737 8.456 16.000 7.793 16.000C7.130 16.000 6.494 15.737 6.025 15.268C5.556 14.799 5.293 14.163 5.293 13.500C5.293 13.500 0.750 13.500 0.750 13.500C0.618 13.500 0.489 13.465 0.375 13.400C0.261 13.334 0.167 13.239 0.101 13.125C0.035 13.012 0.000 12.882 0.000 12.751C-0.000 12.619 0.034 12.490 0.100 12.376C0.100 12.376 2.293 8.569 2.293 8.569C2.293 8.569 2.293 5.500 2.293 5.500ZM6.793 13.500C6.793 13.765 6.898 14.020 7.086 14.207C7.273 14.395 7.528 14.500 7.793 14.500C8.058 14.500 8.312 14.395 8.500 14.207C8.688 14.020 8.793 13.765 8.793 13.500C8.793 13.500 6.793 13.500 6.793 13.500Z" fill-rule="nonzero" fill="#B3B3B3"/></svg>
+              </div>
+            </div>
+            <!-- Friends: 32×32 button, 16×16 icon -->
+            <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:9999px;flex-shrink:0;">
+              <div style="width:16px;height:16px;overflow:hidden;position:relative;flex-shrink:0;">
+                <svg viewBox="0 0 16 15.17" width="16" height="15.17" xmlns="http://www.w3.org/2000/svg" style="position:absolute;left:0%;top:6.2%;overflow:visible;"><path d="M3.853 9.043C3.832 8.578 3.879 8.113 3.992 7.662C3.992 7.662 1.673 7.662 1.673 7.662C1.816 7.359 2.048 7.106 2.338 6.938C2.338 6.938 3.260 6.406 3.260 6.406C3.466 6.287 3.644 6.125 3.780 5.930C3.917 5.735 4.009 5.513 4.051 5.278C4.092 5.044 4.082 4.804 4.021 4.574C3.960 4.344 3.849 4.130 3.696 3.948C3.421 3.651 3.254 3.270 3.222 2.867C3.213 2.675 3.232 2.488 3.279 2.304C3.327 2.149 3.407 2.006 3.516 1.885C3.624 1.764 3.757 1.668 3.906 1.604C4.055 1.540 4.216 1.507 4.378 1.507C4.540 1.507 4.701 1.540 4.850 1.604C5.000 1.670 5.131 1.764 5.242 1.885C5.350 2.005 5.430 2.148 5.479 2.302C5.528 2.486 5.547 2.673 5.536 2.863C5.504 3.267 5.337 3.649 5.061 3.947C4.840 4.208 4.708 4.534 4.686 4.876C4.663 5.218 4.751 5.559 4.937 5.847C5.297 5.459 5.729 5.145 6.209 4.920C6.689 4.359 6.977 3.672 7.030 2.947C7.053 2.564 7.007 2.181 6.895 1.815C6.718 1.286 6.380 0.827 5.928 0.501C5.476 0.175 4.932 0.000 4.375 0.000C3.818 0.000 3.275 0.175 2.822 0.501C2.370 0.827 2.032 1.286 1.855 1.815C1.744 2.182 1.698 2.565 1.720 2.948C1.773 3.672 2.061 4.358 2.541 4.903C2.553 4.917 2.562 4.934 2.567 4.953C2.572 4.971 2.572 4.990 2.569 5.009C2.566 5.028 2.559 5.046 2.548 5.061C2.537 5.077 2.523 5.090 2.506 5.100C2.506 5.100 1.584 5.632 1.584 5.632C1.100 5.915 0.699 6.320 0.421 6.807C0.143 7.293 -0.002 7.844 0.000 8.405C0.000 8.405 0.000 9.155 0.000 9.155C0.000 9.155 3.866 9.155 3.866 9.155C3.867 9.122 3.856 9.084 3.853 9.043ZM14.421 5.643C14.421 5.643 13.499 5.111 13.499 5.111C13.482 5.101 13.468 5.088 13.457 5.073C13.446 5.057 13.438 5.039 13.435 5.020C13.432 5.002 13.433 4.984 13.438 4.967C13.442 4.949 13.451 4.933 13.463 4.920C13.943 4.374 14.231 3.687 14.284 2.962C14.305 2.579 14.260 2.194 14.149 1.827C14.032 1.476 13.844 1.154 13.595 0.881C13.346 0.608 13.042 0.390 12.704 0.242C12.194 0.018 11.626 -0.041 11.080 0.073C10.535 0.188 10.039 0.471 9.662 0.882C9.413 1.156 9.224 1.479 9.108 1.830C8.998 2.197 8.952 2.580 8.974 2.963C9.027 3.687 9.315 4.373 9.795 4.918C9.800 4.924 9.795 4.929 9.795 4.936C10.275 5.161 10.706 5.476 11.067 5.863C11.254 5.574 11.343 5.232 11.321 4.889C11.298 4.545 11.165 4.218 10.942 3.956C10.667 3.659 10.500 3.278 10.468 2.875C10.458 2.683 10.477 2.496 10.525 2.312C10.573 2.157 10.653 2.014 10.762 1.893C10.870 1.772 11.003 1.676 11.152 1.612C11.301 1.548 11.462 1.515 11.624 1.515C11.786 1.515 11.947 1.548 12.096 1.612C12.246 1.678 12.377 1.772 12.488 1.893C12.596 2.014 12.675 2.152 12.724 2.306C12.774 2.490 12.794 2.681 12.782 2.871C12.750 3.275 12.583 3.657 12.307 3.955C12.155 4.138 12.045 4.351 11.985 4.581C11.924 4.811 11.914 5.051 11.956 5.284C11.998 5.518 12.090 5.740 12.226 5.935C12.362 6.129 12.539 6.292 12.745 6.411C12.745 6.411 13.667 6.943 13.667 6.943C13.957 7.112 14.187 7.364 14.331 7.667C14.331 7.667 12.012 7.667 12.012 7.667C12.125 8.119 12.172 8.585 12.151 9.050C12.151 9.090 12.138 9.128 12.134 9.167C12.134 9.167 16.000 9.167 16.000 9.167C16.000 9.167 16.000 8.417 16.000 8.417C16.003 7.856 15.859 7.304 15.582 6.816C15.304 6.329 14.904 5.923 14.420 5.639ZM10.796 11.643C10.796 11.643 9.874 11.111 9.874 11.111C9.850 11.097 9.830 11.075 9.819 11.049C9.808 11.023 9.806 10.994 9.813 10.967C9.817 10.949 9.826 10.933 9.838 10.920C10.318 10.374 10.606 9.687 10.659 8.962C10.682 8.579 10.636 8.196 10.524 7.830C10.348 7.301 10.009 6.841 9.557 6.515C9.105 6.189 8.561 6.014 8.004 6.014C7.446 6.014 6.902 6.189 6.450 6.515C5.998 6.841 5.659 7.301 5.483 7.830C5.373 8.197 5.327 8.580 5.349 8.963C5.402 9.687 5.690 10.373 6.170 10.918C6.182 10.932 6.191 10.949 6.196 10.968C6.201 10.986 6.201 11.005 6.198 11.024C6.195 11.043 6.188 11.061 6.177 11.076C6.166 11.092 6.152 11.105 6.135 11.115C6.135 11.115 5.213 11.647 5.213 11.647C4.729 11.930 4.328 12.335 4.050 12.822C3.772 13.308 3.627 13.859 3.629 14.420C3.629 14.420 3.629 15.170 3.629 15.170C3.629 15.170 12.379 15.170 12.379 15.170C12.379 15.170 12.379 14.420 12.379 14.420C12.382 13.858 12.238 13.305 11.960 12.817C11.682 12.329 11.281 11.923 10.796 11.639ZM5.296 13.666C5.439 13.363 5.671 13.110 5.961 12.942C5.961 12.942 6.883 12.410 6.883 12.410C7.089 12.291 7.267 12.128 7.403 11.934C7.540 11.739 7.632 11.517 7.674 11.282C7.715 11.048 7.705 10.808 7.644 10.578C7.583 10.348 7.472 10.134 7.319 9.952C7.044 9.655 6.877 9.274 6.845 8.871C6.835 8.679 6.854 8.492 6.902 8.308C6.950 8.153 7.030 8.010 7.139 7.889C7.247 7.768 7.380 7.672 7.529 7.608C7.678 7.544 7.839 7.511 8.001 7.511C8.163 7.511 8.324 7.544 8.473 7.608C8.623 7.674 8.754 7.768 8.865 7.889C8.973 8.009 9.053 8.152 9.102 8.306C9.151 8.490 9.170 8.677 9.159 8.867C9.127 9.271 8.960 9.653 8.684 9.951C8.532 10.134 8.422 10.347 8.361 10.577C8.301 10.807 8.291 11.047 8.332 11.281C8.374 11.514 8.466 11.736 8.603 11.931C8.739 12.125 8.916 12.288 9.122 12.407C9.122 12.407 10.044 12.939 10.044 12.939C10.334 13.108 10.564 13.360 10.708 13.663Z" fill-rule="nonzero" fill="#B3B3B3"/></svg>
+              </div>
+            </div>
+          </div>
+          <!-- Avatar: 48×48, bg #1F1F1F, 32×32 inner dark circle -->
+          <div style="width:48px;height:48px;background:#1F1F1F;border-radius:9999px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div style="width:32px;height:32px;background:#2D2D2D;border-radius:16px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="sp-body">
+
+        <!-- Left sidebar: 280px, bg #000000 -->
+        <div class="sp-sidebar">
+          <!-- "Your Library" header: 16px/700/white -->
+          <div class="sp-lib-header" style="justify-content:space-between;">
+            <span class="sp-lib-title">Your Library</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <!-- + Create button -->
+              <div style="width:35px;height:35px;background:#1F1F1F;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="14" height="14" viewBox="0 0 14.5 14.5" fill="#B3B3B3"><path d="M14.5 7.25a.75.75 0 01-.75.75H8v5.75a.75.75 0 01-1.5 0V8H.75a.75.75 0 010-1.5H6.5V.75a.75.75 0 011.5 0V6.5h5.75a.75.75 0 01.75.75z" fill-rule="nonzero"/></svg>
+              </div>
+              <!-- Expand button -->
+              <div style="width:35px;height:35px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="13" height="13" viewBox="0 0 13.5 13.5" fill="#B3B3B3"><path d="M5.28 8.22a.75.75 0 010 1.06L2.56 12l1.018.001a.75.75 0 010 1.499H0V9.921a.75.75 0 011.5 0v1.018l2.72-2.72a.75.75 0 011.06 0zM8.22 5.28a.75.75 0 010-1.06L10.94 1.5H9.922a.75.75 0 010-1.5H13.5v3.579a.75.75 0 01-1.5 0V2.56L9.28 5.28a.75.75 0 01-1.06 0z" fill-rule="nonzero"/></svg>
+              </div>
+            </div>
+          </div>
+          <!-- Pills: bg #FFFFFF1A, border-radius 9999px, 14px/white -->
+          <div class="sp-lib-tabs">
+            <span class="sp-lib-tab">Playlists</span>
+            <span class="sp-lib-tab">Artists</span>
+            <span class="sp-lib-tab">Albums</span>
+            <span class="sp-lib-tab">Podcasts</span>
+          </div>
+          <!-- Sort bar: search icon left, Recents + sort icon right -->
+          <div style="padding: 0 8px 8px; display: flex; flex-direction: column; gap: 8px;">
+            <div class="sp-lib-sort">
+              <div class="sp-lib-sort-search">
+                <svg viewBox="0 0 15.52 15.35" width="16" height="16" xmlns="http://www.w3.org/2000/svg"><path d="M6.750 1.501C6.061 1.501 5.378 1.637 4.741 1.901C4.104 2.164 3.525 2.551 3.038 3.039C2.550 3.526 2.163 4.105 1.900 4.742C1.636 5.379 1.500 6.062 1.500 6.751C1.500 7.440 1.636 8.123 1.900 8.760C2.163 9.397 2.550 9.976 3.038 10.463C3.525 10.951 4.104 11.338 4.741 11.601C5.378 11.865 6.061 12.001 6.750 12.001C8.142 12.001 9.478 11.448 10.462 10.463C11.447 9.479 12.000 8.143 12.000 6.751C12.000 5.359 11.447 4.023 10.462 3.039C9.478 2.054 8.142 1.501 6.750 1.501ZM0.000 6.751C-0.000 5.678 0.256 4.620 0.746 3.665C1.237 2.710 1.948 1.886 2.821 1.262C3.693 0.637 4.703 0.229 5.764 0.072C6.826 -0.084 7.910 0.014 8.926 0.360C9.942 0.707 10.861 1.290 11.607 2.062C12.352 2.835 12.903 3.773 13.213 4.801C13.522 5.829 13.583 6.915 13.389 7.971C13.194 9.027 12.751 10.021 12.096 10.871L15.280 14.056a.75.75 0 01-1.060 1.060L10.054 11.95C9.067 12.768 7.868 13.287 6.597 13.448C5.326 13.609 4.036 13.404 2.877 12.859C1.718 12.314 0.737 11.450 0.051 10.368C-0.636 9.287 -0.000 8.032 0.000 6.751Z" fill-rule="nonzero" fill="rgba(255,255,255,0.7)"/></svg>
+              </div>
+              <div class="sp-lib-sort-recents">
+                <span>Recents</span>
+                <svg viewBox="0 0 14 13" width="16" height="16" xmlns="http://www.w3.org/2000/svg"><path d="M14 13H4v-1.5h10V13zm0-5.75H4V5.75h10v1.5zm0-5.75H4V0h10v1.5zM2 1.5H0V0h2v1.5zm0 11.5H0v-1.5h2V13zm0-5.75H0V5.75h2v1.5z" fill-rule="nonzero" fill="#B3B3B3"/></svg>
+              </div>
+            </div>
+          </div>
+          <!-- List items: height 64px, thumbnail 48×48 -->
+          <div class="sp-lib-list">
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#5018F0;display:flex;align-items:center;justify-content:center;">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="#1ED760"><path d="M6.602.598a1 1 0 00-1.204 0L.103 4.359l3.364 3.364L.151 11.04a.553.553 0 00.795.795l3.316-3.316 3.365 3.365 3.757-3.757a1 1 0 000-1.342L7.627 11.883 6.602.598z" fill-rule="nonzero"/></svg>
+              </div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">Liked Songs</span>
+                <span class="sp-lib-sub">Playlist · 23 songs</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#004050;"></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">ionnalee's MOUTH OF A RIVER, pt. 2</span>
+                <span class="sp-lib-sub">Album · ionnalee</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb round" style="background:#457C9F;"></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">Daisy*</span>
+                <span class="sp-lib-sub">Artist</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb round" style="background:#72777D;"></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">Memphis LK</span>
+                <span class="sp-lib-sub">Artist</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb round" style="background:#717878;"></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">Linnea Awad</span>
+                <span class="sp-lib-sub">Artist</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#68778E;"></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">LONDON'S LAST SWEETHEART LOST RECORDINGS</span>
+                <span class="sp-lib-sub">EP · LAUREL</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#357F99;"></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">Jukebox Dream, Vol. 1</span>
+                <span class="sp-lib-sub">Album · NINA</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#282828;"></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">Offering</span>
+                <span class="sp-lib-sub">Upcoming album · Ibeyi</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#482000;"></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">Resurrection</span>
+                <span class="sp-lib-sub">Album · Chlöe</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#483840;"></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">Murmurs Uncut</span>
+                <span class="sp-lib-sub">Album · Cosha</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#377BB8;"></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">Resonance</span>
+                <span class="sp-lib-sub">Album · Acid Arab</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#1D892E;"></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">WHACK'S MUSEUM</span>
+                <span class="sp-lib-sub">Album · Tierra Whack</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main content: bg #121212 -->
+        <div class="sp-main">
+
+          <!-- Playlist header: bg #650000 + gradient, cover 232×232 -->
+          <div class="sp-playlist-header">
+            <div class="sp-cover-slot">
+              <!-- canvas is hoisted to sp-canvas-float above the dim overlay -->
+            </div>
+            <div class="sp-playlist-meta">
+              <!-- "Public Playlist": 14px/400/white -->
+              <span class="sp-playlist-type">Public Playlist</span>
+              <!-- Title: 72px/800/white, line-height 88px -->
+              <div class="sp-playlist-name">Your Playlist Name</div>
+              <!-- Metadata: 14px/#FFFFFFB3, bold username -->
+              <div class="sp-playlist-info"><strong>spotify</strong> · 40 saves · 387 songs, over 24 hr</div>
+            </div>
+          </div>
+
+          <!-- Controls: padding 24px, height 104px -->
+          <div class="sp-controls">
+            <!-- Play: 56×56, #1ED760 -->
+            <div class="sp-play-btn">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="black" style="margin-left:2px"><polygon points="4,2 18,10 4,18"/></svg>
+            </div>
+            <!-- Shuffle -->
+            <svg class="sp-ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+            <!-- Download -->
+            <svg class="sp-ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+            <!-- Add user -->
+            <svg class="sp-ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            <!-- Mix button -->
+            <div class="sp-mix-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
+              Mix
+            </div>
+            <!-- More -->
+            <svg class="sp-ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </div>
+
+          <!-- Track list -->
+          <div class="sp-tracklist">
+            <!-- Header row -->
+            <div class="sp-track-header">
+              <span class="th-num">#</span>
+              <span class="th-title">Title</span>
+              <span class="th-album">Album</span>
+              <span class="th-date">Date added</span>
+              <span class="th-dur">
+                <svg width="16" height="16" viewBox="0 0 21 16" fill="#B3B3B3"><path d="M13 0a8 8 0 100 16A8 8 0 0013 0zm0 1.5a6.5 6.5 0 110 13 6.5 6.5 0 010-13zm.75.75a.75.75 0 00-.75.75v3.25h-2.75a.75.75 0 000 1.5h3.5a.75.75 0 00.75-.75V3a.75.75 0 00-.75-.75z" fill-rule="nonzero"/></svg>
+              </span>
+            </div>
+            <!-- Track rows: 16px top padding per Paper node 1VF-0 -->
+            <div class="sp-track-rows">
+            <div class="sp-track-row">
+              <span class="sp-track-num">1</span>
+              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">In Your Eyes</span><span class="sp-track-artist">yuraa</span></div></div>
+              <span class="sp-track-album">In Your Eyes</span>
+              <span class="sp-track-date">Jan 5, 2026</span>
+              <span class="sp-track-dur">2:45</span>
+            </div>
+            <div class="sp-track-row">
+              <span class="sp-track-num">2</span>
+              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">Someone</span><span class="sp-track-artist">Sassy 009</span></div></div>
+              <span class="sp-track-album">Someone</span>
+              <span class="sp-track-date">Jan 7, 2026</span>
+              <span class="sp-track-dur">3:26</span>
+            </div>
+            <div class="sp-track-row">
+              <span class="sp-track-num">3</span>
+              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">Fame is a Gun – triple j Like A Version</span><span class="sp-track-artist">Rebecca Black</span></div></div>
+              <span class="sp-track-album">Fame is a Gun – triple j Like A Version</span>
+              <span class="sp-track-date">Jan 6, 2026</span>
+              <span class="sp-track-dur">3:37</span>
+            </div>
+            <div class="sp-track-row">
+              <span class="sp-track-num">4</span>
+              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">Talk To Me</span><span class="sp-track-artist">Robyn</span></div></div>
+              <span class="sp-track-album">Sexistential / Talk To Me</span>
+              <span class="sp-track-date">Jan 7, 2026</span>
+              <span class="sp-track-dur">3:19</span>
+            </div>
+            <div class="sp-track-row">
+              <span class="sp-track-num">5</span>
+              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">Dance The Pain Away</span><span class="sp-track-artist">Haute &amp; Freddy</span></div></div>
+              <span class="sp-track-album">Dance The Pain Away</span>
+              <span class="sp-track-date">Jan 8, 2026</span>
+              <span class="sp-track-dur">3:39</span>
+            </div>
+            <div class="sp-track-row">
+              <span class="sp-track-num">6</span>
+              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">drifting – remix</span><span class="sp-track-artist">Night Tapes, kryptogram</span></div></div>
+              <span class="sp-track-album">drifting – remix</span>
+              <span class="sp-track-date">Jan 9, 2026</span>
+              <span class="sp-track-dur">4:36</span>
+            </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
+  </div>
+
+  <!-- Loading overlay — fixed over canvas area -->
+  <div class="loading-overlay" id="overlay">
+    <div class="big-spinner"></div>
+    <span id="overlay-msg">Loading playlist…</span>
   </div>
 
   <!-- Fixed left panel — Paper design -->
@@ -390,6 +1251,10 @@
           <button class="layout-option" data-layout="strips">Strips</button>
           <button class="layout-option" data-layout="grid">Grid</button>
         </div>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="view-cover">Cover</button>
+        <button class="view-btn" id="view-spotify">Spotify</button>
       </div>
     </div>
 
@@ -471,6 +1336,10 @@
       <div class="actions-row">
         <button class="btn-reload" id="btn-reload" title="Reload playlist">↺</button>
         <button class="btn-push" id="btn-publish" disabled>Push to Spotify</button>
+      </div>
+      <div class="export-row">
+        <button class="btn-export" id="btn-export-jpg">Export JPEG</button>
+        <button class="btn-export" id="btn-export-png">Export PNG</button>
       </div>
       <div class="status" id="status"></div>
 
@@ -851,6 +1720,19 @@
       }
     });
 
+    function exportCanvas(format) {
+      const mime = format === 'jpg' ? 'image/jpeg' : 'image/png';
+      const quality = format === 'jpg' ? 0.95 : undefined;
+      const url = canvas.toDataURL(mime, quality);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `spotify-cover.${format === 'jpg' ? 'jpg' : 'png'}`;
+      a.click();
+    }
+
+    document.getElementById('btn-export-jpg').addEventListener('click', () => exportCanvas('jpg'));
+    document.getElementById('btn-export-png').addEventListener('click', () => exportCanvas('png'));
+
     document.getElementById('btn-reload').addEventListener('click', async () => {
       const btn = document.getElementById('btn-reload');
       btn.disabled = true;
@@ -865,7 +1747,158 @@
       }
     });
 
+    // ── Pan & Zoom — single unified Spotify frame ─────────────────────────────
+    //
+    // The canvas lives inside the Spotify frame's cover slot (232×232px).
+    // Cover mode  = zoom into the cover slot so only the cover is visible.
+    // Spotify mode = zoom out to show the full 1395×984 frame.
+    // Both modes share one pan/zoom state; switching views animates the transform.
+
+    const canvasWrap    = document.querySelector('.canvas-wrap');
+    const spotifyFrame  = document.getElementById('spotify-preview');
+    const SP_W = 1506, SP_H = 1159;
+    const MIN_ZOOM = 0.05, MAX_ZOOM = 12;
+
+    // Cover slot center within the 1506×1159 frame.
+    // sp-body has padding: 0 8px 8px, gap: 8px
+    // sidebar: 386px → sp-main starts at x = 8 + 386 + 8 = 402
+    // sp-playlist-header: padding-inline 24px, padding-top 40px, align-items: flex-start
+    // cover left = 402 + 24 = 426, cover top = 64(nav) + 40(header-pad-top) = 104
+    const COVER_CX = 426 + 116; // 542
+    const COVER_CY = 104 + 116; // 220
+
+    let currentView = 'cover';
+    let frameState  = { panX: 0, panY: 0, zoom: 1 };
+
+    function getSpFitScale() {
+      const availW = window.innerWidth;
+      const availH = window.innerHeight;
+      return Math.min(1, availW / SP_W, availH / SP_H) * 0.9;
+    }
+
+    function getCoverZoom() {
+      // Zoom so the cover fills ~65% of the shortest available dimension.
+      const availW = window.innerWidth;
+      const availH = window.innerHeight;
+      return Math.min(availH * 0.65, availW * 0.65) / 232;
+    }
+
+    function coverInitState() {
+      const z = getCoverZoom();
+      // Pan so cover center aligns with viewport center
+      // (frame center is at origin due to flex centering; offset is cover - frame-center)
+      return {
+        panX: (SP_W / 2 - COVER_CX) * z,
+        panY: (SP_H / 2 - COVER_CY) * z,
+        zoom: z
+      };
+    }
+
+    function spotifyInitState() {
+      return { panX: 0, panY: 0, zoom: getSpFitScale() };
+    }
+
+    function applyTransform(animate) {
+      if (animate) spotifyFrame.classList.add('view-transitioning');
+      else         spotifyFrame.classList.remove('view-transitioning');
+      spotifyFrame.style.transformOrigin = 'center center';
+      spotifyFrame.style.transform =
+        `translate(${frameState.panX}px,${frameState.panY}px) scale(${frameState.zoom})`;
+    }
+
+    // ── View toggle ───────────────────────────────────────────────────────────
+    document.getElementById('view-cover').addEventListener('click', () => {
+      if (currentView === 'cover') return;
+      currentView = 'cover';
+      document.getElementById('view-cover').classList.add('active');
+      document.getElementById('view-spotify').classList.remove('active');
+      frameState = coverInitState();
+      applyTransform(true);
+      spotifyFrame.classList.add('cover-mode');
+      spotifyFrame.addEventListener('transitionend', () =>
+        spotifyFrame.classList.remove('view-transitioning'), { once: true });
+    });
+
+    document.getElementById('view-spotify').addEventListener('click', () => {
+      if (currentView === 'spotify') return;
+      currentView = 'spotify';
+      document.getElementById('view-spotify').classList.add('active');
+      document.getElementById('view-cover').classList.remove('active');
+      spotifyFrame.classList.remove('cover-mode');
+      frameState = spotifyInitState();
+      applyTransform(true);
+      spotifyFrame.addEventListener('transitionend', () =>
+        spotifyFrame.classList.remove('view-transitioning'), { once: true });
+    });
+
+    // Drag to pan
+    let isDragging = false, dragStart = {x:0,y:0}, panAtDrag = {x:0,y:0};
+
+    canvasWrap.addEventListener('mousedown', e => {
+      isDragging = true;
+      dragStart = { x: e.clientX, y: e.clientY };
+      panAtDrag = { x: frameState.panX, y: frameState.panY };
+      canvasWrap.classList.add('dragging');
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      frameState.panX = panAtDrag.x + (e.clientX - dragStart.x);
+      frameState.panY = panAtDrag.y + (e.clientY - dragStart.y);
+      applyTransform(false);
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDragging) { isDragging = false; canvasWrap.classList.remove('dragging'); }
+    });
+
+    // Scroll to zoom toward cursor
+    canvasWrap.addEventListener('wheel', e => {
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 0.92 : 1.09;
+      const rect = canvasWrap.getBoundingClientRect();
+      const mx = e.clientX - rect.left - rect.width / 2;
+      const my = e.clientY - rect.top  - rect.height / 2;
+      const newZ = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, frameState.zoom * factor));
+      frameState.panX = mx - (mx - frameState.panX) * (newZ / frameState.zoom);
+      frameState.panY = my - (my - frameState.panY) * (newZ / frameState.zoom);
+      frameState.zoom = newZ;
+      applyTransform(false);
+    }, { passive: false });
+
+    // Pinch-to-zoom
+    let lastPinchDist = null;
+    canvasWrap.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) lastPinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }, { passive: true });
+
+    canvasWrap.addEventListener('touchmove', e => {
+      if (e.touches.length !== 2 || lastPinchDist === null) return;
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = dist / lastPinchDist;
+      lastPinchDist = dist;
+      frameState.zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, frameState.zoom * factor));
+      applyTransform(false);
+    }, { passive: true });
+
+    canvasWrap.addEventListener('touchend', () => { lastPinchDist = null; });
+
+    window.addEventListener('resize', () => {
+      if (currentView === 'cover') frameState = coverInitState();
+      else frameState = spotifyInitState();
+      applyTransform(false);
+    });
+
     // ── Init ──────────────────────────────────────────────────────────────────
+    frameState = coverInitState();
+    applyTransform(false);
     updateVisibility('bubble');
     loadTracks().catch(err => {
       setOverlay(false);
