@@ -935,138 +935,9 @@
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
-  /* ── Auth & playlist picker screens ── */
-  .auth-screen {
-    position: fixed; inset: 0; z-index: 1000;
-    background: #000;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .auth-screen.hidden { display: none; }
-
-  .auth-card {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 20px; max-width: 420px; width: 100%; padding: 48px 40px;
-    text-align: center;
-  }
-  .auth-logo {
-    display: flex; align-items: center; gap: 10px;
-    color: #fff; font-size: 15px; font-weight: 700;
-    font-family: system-ui, sans-serif; letter-spacing: -0.01em;
-  }
-  .auth-title {
-    font-size: 42px; font-weight: 900; line-height: 1.1;
-    color: #fff; font-family: system-ui, sans-serif;
-    letter-spacing: -0.03em;
-  }
-  .auth-sub {
-    font-size: 15px; line-height: 1.6; color: #B3B3B3;
-    font-family: system-ui, sans-serif;
-  }
-  .auth-btn {
-    display: flex; align-items: center; gap: 10px;
-    background: #1ED760; color: #000;
-    font-size: 14px; font-weight: 700;
-    font-family: system-ui, sans-serif;
-    padding: 14px 32px; border-radius: 500px;
-    text-decoration: none; transition: transform 0.15s, background 0.15s;
-    letter-spacing: 0.01em;
-  }
-  .auth-btn:hover { background: #1fdf64; transform: scale(1.03); }
-  .auth-note {
-    font-size: 12px; color: #535353;
-    font-family: system-ui, sans-serif;
-  }
-
-  /* Playlist picker */
-  .playlist-card {
-    display: flex; flex-direction: column;
-    width: 780px; max-width: 95vw;
-    max-height: 90vh; padding: 40px 40px 32px;
-    gap: 24px;
-  }
-  .playlist-header {
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .playlist-user {
-    font-size: 13px; color: #B3B3B3;
-    font-family: system-ui, sans-serif;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .playlist-user a {
-    color: #B3B3B3; font-size: 13px; font-family: system-ui, sans-serif;
-    text-decoration: none;
-  }
-  .playlist-user a:hover { color: #fff; }
-  .playlist-title {
-    font-size: 28px; font-weight: 800; color: #fff;
-    font-family: system-ui, sans-serif; letter-spacing: -0.02em;
-  }
-  .playlist-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-    overflow-y: auto; max-height: calc(90vh - 200px);
-    padding-right: 4px;
-  }
-  .playlist-grid::-webkit-scrollbar { width: 4px; }
-  .playlist-grid::-webkit-scrollbar-track { background: transparent; }
-  .playlist-grid::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-  .playlist-item {
-    display: flex; flex-direction: column; gap: 8px;
-    cursor: pointer; padding: 12px; border-radius: 8px;
-    background: #111; transition: background 0.15s;
-  }
-  .playlist-item:hover { background: #1a1a1a; }
-  .playlist-item img {
-    width: 100%; aspect-ratio: 1; object-fit: cover;
-    border-radius: 4px; background: #282828;
-  }
-  .playlist-item-img-placeholder {
-    width: 100%; aspect-ratio: 1; border-radius: 4px;
-    background: #282828; display: flex; align-items: center; justify-content: center;
-  }
-  .playlist-item-name {
-    font-size: 13px; font-weight: 600; color: #fff;
-    font-family: system-ui, sans-serif;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .playlist-item-count {
-    font-size: 12px; color: #B3B3B3;
-    font-family: system-ui, sans-serif;
-  }
   </style>
 </head>
 <body>
-
-  <!-- ── Auth screens ─────────────────────────────────────────── -->
-  <div id="auth-screen" class="auth-screen hidden">
-    <div class="auth-card">
-      <div class="auth-logo">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="#1ED760"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-        <span>Cover Generator</span>
-      </div>
-      <h1 class="auth-title">Generate a cover<br>for any playlist.</h1>
-      <p class="auth-sub">Connect your Spotify account, pick a playlist, and create a unique mosaic cover from your album art.</p>
-      <a href="/api/login" class="auth-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-        Connect with Spotify
-      </a>
-      <p class="auth-note">We only request permission to read your playlists and update playlist covers.</p>
-    </div>
-  </div>
-
-  <!-- ── Playlist picker ───────────────────────────────────────── -->
-  <div id="playlist-screen" class="auth-screen hidden">
-    <div class="playlist-card">
-      <div class="playlist-header">
-        <div class="auth-logo">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="#1ED760"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-          <span>Cover Generator</span>
-        </div>
-        <div id="playlist-user" class="playlist-user"></div>
-      </div>
-      <h2 class="playlist-title">Pick a playlist</h2>
-      <div id="playlist-grid" class="playlist-grid"></div>
-    </div>
-  </div>
 
   <!-- Centered canvas -->
   <div class="canvas-wrap">
@@ -1627,10 +1498,8 @@
         </div>
       </div>
 
-      <!-- Push to Spotify -->
       <div class="actions-row">
-        <button class="btn-reload" id="btn-reload" title="Reload playlist">↺</button>
-        <button class="btn-push" id="btn-publish" disabled>Push to Spotify</button>
+        <button class="btn-reload" id="btn-reload" title="Reload artworks">↺</button>
       </div>
       <div class="export-row">
         <button class="btn-export" id="btn-export-jpg">Export JPEG</button>
@@ -1642,117 +1511,88 @@
   </div>
 
   <script>
-  // ── Auth & playlist flow ──────────────────────────────────────────────────
-  const authScreen     = document.getElementById('auth-screen');
-  const playlistScreen = document.getElementById('playlist-screen');
-  const appRoot        = document.querySelector('.canvas-wrap');
-  const panelEl        = document.querySelector('.panel');
+  // ── Demo mode: pre-loaded sample album art ────────────────────────────────
+  window._spotifyTracks = [
+    { id:'1',  name:'Abbey Road',              artist:'The Beatles',         imageUrl:'https://upload.wikimedia.org/wikipedia/en/4/42/Beatles_-_Abbey_Road.jpg' },
+    { id:'2',  name:'Dark Side of the Moon',   artist:'Pink Floyd',          imageUrl:'https://upload.wikimedia.org/wikipedia/en/3/3b/Dark_Side_of_the_Moon.png' },
+    { id:'3',  name:'Nevermind',               artist:'Nirvana',             imageUrl:'https://upload.wikimedia.org/wikipedia/en/b/b7/NirvanaNevermindalbumcover.jpg' },
+    { id:'4',  name:'Thriller',                artist:'Michael Jackson',     imageUrl:'https://upload.wikimedia.org/wikipedia/en/5/55/Michael_Jackson_-_Thriller.png' },
+    { id:'5',  name:'Rumours',                 artist:'Fleetwood Mac',       imageUrl:'https://upload.wikimedia.org/wikipedia/en/f/f6/Fleetwood_Mac_-_Rumours.png' },
+    { id:'6',  name:'Led Zeppelin IV',         artist:'Led Zeppelin',        imageUrl:'https://upload.wikimedia.org/wikipedia/en/2/26/Led_Zeppelin_-_Led_Zeppelin_IV.jpg' },
+    { id:'7',  name:'Purple Rain',             artist:'Prince',              imageUrl:'https://upload.wikimedia.org/wikipedia/en/9/9c/Princepurplerain.jpg' },
+    { id:'8',  name:'The Rise and Fall of Ziggy Stardust', artist:'David Bowie', imageUrl:'https://upload.wikimedia.org/wikipedia/en/a/a9/Ziggy_Stardust.jpg' },
+    { id:'9',  name:'OK Computer',             artist:'Radiohead',           imageUrl:'https://upload.wikimedia.org/wikipedia/en/b/ba/Radioheadokcomputer.png' },
+    { id:'10', name:'Random Access Memories',  artist:'Daft Punk',           imageUrl:'https://upload.wikimedia.org/wikipedia/en/a/a8/Random_Access_Memories.jpg' },
+    { id:'11', name:'To Pimp a Butterfly',     artist:'Kendrick Lamar',      imageUrl:'https://upload.wikimedia.org/wikipedia/en/f/f6/To_Pimp_a_Butterfly.png' },
+    { id:'12', name:'Back to Black',           artist:'Amy Winehouse',       imageUrl:'https://upload.wikimedia.org/wikipedia/en/c/c8/Amy_Winehouse_-_Back_to_Black.png' },
+    { id:'13', name:'21',                      artist:'Adele',               imageUrl:'https://upload.wikimedia.org/wikipedia/en/1/1b/Adele_-_21.png' },
+    { id:'14', name:'Lemonade',                artist:'Beyoncé',             imageUrl:'https://upload.wikimedia.org/wikipedia/en/5/53/Beyonce_-_Lemonade_%28Official_Album_Cover%29.png' },
+    { id:'15', name:'Blonde',                  artist:'Frank Ocean',         imageUrl:'https://upload.wikimedia.org/wikipedia/en/a/a0/Blonde_-_Frank_Ocean.jpeg' },
+    { id:'16', name:'My Beautiful Dark Twisted Fantasy', artist:'Kanye West', imageUrl:'https://upload.wikimedia.org/wikipedia/en/3/3f/My_Beautiful_Dark_Twisted_Fantasy.png' },
+    { id:'17', name:'good kid, m.A.A.d city',  artist:'Kendrick Lamar',      imageUrl:'https://upload.wikimedia.org/wikipedia/en/4/4c/Good_Kid_Maad_City_album_cover.png' },
+    { id:'18', name:'In Rainbows',             artist:'Radiohead',           imageUrl:'https://upload.wikimedia.org/wikipedia/en/3/3e/In_Rainbows_Official_Cover.jpg' },
+    { id:'19', name:'Kind of Blue',            artist:'Miles Davis',         imageUrl:'https://upload.wikimedia.org/wikipedia/en/d/d7/KindofBlue.jpg' },
+    { id:'20', name:'Illmatic',                artist:'Nas',                 imageUrl:'https://upload.wikimedia.org/wikipedia/en/5/58/NasIllmatic.jpg' },
+    { id:'21', name:'The Marshall Mathers LP', artist:'Eminem',              imageUrl:'https://upload.wikimedia.org/wikipedia/en/9/9a/The_Marshall_Mathers_LP.jpg' },
+    { id:'22', name:'Hybrid Theory',           artist:'Linkin Park',         imageUrl:'https://upload.wikimedia.org/wikipedia/en/7/7b/Linkin_Park-Hybrid_Theory.jpg' },
+    { id:'23', name:'Discovery',               artist:'Daft Punk',           imageUrl:'https://upload.wikimedia.org/wikipedia/en/2/27/Daft_Punk_-_Discovery.png' },
+    { id:'24', name:'Homogenic',               artist:'Björk',               imageUrl:'https://upload.wikimedia.org/wikipedia/en/d/da/Bjork-homogenic.jpg' },
+    { id:'25', name:'The Chronic',             artist:'Dr. Dre',             imageUrl:'https://upload.wikimedia.org/wikipedia/en/1/19/Dr._Dre_-_The_Chronic_CD_cover.jpg' },
+    { id:'26', name:'Funeral',                 artist:'Arcade Fire',         imageUrl:'https://upload.wikimedia.org/wikipedia/en/3/3c/ArcadeFireFuneralCover.jpg' },
+    { id:'27', name:'Hounds of Love',          artist:'Kate Bush',           imageUrl:'https://upload.wikimedia.org/wikipedia/en/b/be/Kate_Bush_-_Hounds_of_Love.png' },
+    { id:'28', name:'Blue',                    artist:'Joni Mitchell',       imageUrl:'https://upload.wikimedia.org/wikipedia/en/c/c6/Joni_Mitchell_-_Blue.jpg' },
+    { id:'29', name:'Loveless',                artist:'My Bloody Valentine', imageUrl:'https://upload.wikimedia.org/wikipedia/en/0/0c/My_Bloody_Valentine_-_Loveless.png' },
+    { id:'30', name:'Pet Sounds',              artist:'The Beach Boys',      imageUrl:'https://upload.wikimedia.org/wikipedia/en/b/bb/PetSoundsCover.jpg' },
+    { id:'31', name:'Sgt. Pepper\'s',          artist:'The Beatles',         imageUrl:'https://upload.wikimedia.org/wikipedia/en/4/42/Sgt._Pepper%27s_Lonely_Hearts_Club_Band.jpg' },
+    { id:'32', name:'Exile on Main St.',       artist:'The Rolling Stones',  imageUrl:'https://upload.wikimedia.org/wikipedia/en/d/da/ExileOnMainSt.jpg' },
+    { id:'33', name:'Songs in the Key of Life',artist:'Stevie Wonder',       imageUrl:'https://upload.wikimedia.org/wikipedia/en/4/46/Songs_in_the_key_of_life.jpg' },
+    { id:'34', name:'What\'s Going On',        artist:'Marvin Gaye',         imageUrl:'https://upload.wikimedia.org/wikipedia/en/d/d0/MarvinGayeWhatsGoingOnalbumcover.jpg' },
+    { id:'35', name:'Appetite for Destruction',artist:'Guns N\' Roses',      imageUrl:'https://upload.wikimedia.org/wikipedia/en/6/60/GunnRosesAppetiteforDestructionalbumcover.jpg' },
+    { id:'36', name:'Achtung Baby',            artist:'U2',                  imageUrl:'https://upload.wikimedia.org/wikipedia/en/a/a8/Achtung_baby_album_cover.jpg' },
+    { id:'37', name:'The Wall',                artist:'Pink Floyd',          imageUrl:'https://upload.wikimedia.org/wikipedia/en/1/13/PinkFloydWallalbumcover.jpg' },
+    { id:'38', name:'Born to Run',             artist:'Bruce Springsteen',   imageUrl:'https://upload.wikimedia.org/wikipedia/en/c/cf/Born_to_Run_%28Front_Cover%29.jpg' },
+    { id:'39', name:'Graceland',               artist:'Paul Simon',          imageUrl:'https://upload.wikimedia.org/wikipedia/en/7/7a/Paul_Simon_-_Graceland.jpg' },
+    { id:'40', name:'Dummy',                   artist:'Portishead',          imageUrl:'https://upload.wikimedia.org/wikipedia/en/7/77/Portishead_-_Dummy_%28album_cover%29.jpg' },
+    { id:'41', name:'Mezzanine',               artist:'Massive Attack',      imageUrl:'https://upload.wikimedia.org/wikipedia/en/b/be/Massive_Attack_Mezzanine_album_cover.jpg' },
+    { id:'42', name:'Sign \'O\' the Times',    artist:'Prince',              imageUrl:'https://upload.wikimedia.org/wikipedia/en/5/5e/Sign_%22%27O%22_the_Times.png' },
+    { id:'43', name:'London Calling',          artist:'The Clash',           imageUrl:'https://upload.wikimedia.org/wikipedia/en/0/0a/London_Calling.png' },
+    { id:'44', name:'Electric Ladyland',       artist:'Jimi Hendrix',        imageUrl:'https://upload.wikimedia.org/wikipedia/en/6/6b/Electric_Ladyland.jpg' },
+    { id:'45', name:'Sticky Fingers',          artist:'The Rolling Stones',  imageUrl:'https://upload.wikimedia.org/wikipedia/en/e/e8/Sticky_Fingers_album_cover.jpg' },
+    { id:'46', name:'Doggystyle',              artist:'Snoop Dogg',          imageUrl:'https://upload.wikimedia.org/wikipedia/en/6/63/SnoopDoggDoggystyle.jpg' },
+    { id:'47', name:'Ready to Die',            artist:'The Notorious B.I.G.',imageUrl:'https://upload.wikimedia.org/wikipedia/en/e/e6/Ready_to_Die.jpg' },
+    { id:'48', name:'The College Dropout',     artist:'Kanye West',          imageUrl:'https://upload.wikimedia.org/wikipedia/en/a/a3/Kanyewest_collegedropout.jpg' },
+    { id:'49', name:'Vespertine',              artist:'Björk',               imageUrl:'https://upload.wikimedia.org/wikipedia/en/e/e9/Vespertine.jpg' },
+    { id:'50', name:'Rated R',                 artist:'Rihanna',             imageUrl:'https://upload.wikimedia.org/wikipedia/en/1/12/Rihanna_-_Rated_R_%28Album_Cover%29.png' },
+    { id:'51', name:'The Blueprint',           artist:'Jay-Z',               imageUrl:'https://upload.wikimedia.org/wikipedia/en/e/e2/Jay_Z-Blueprint.jpg' },
+    { id:'52', name:'Supreme Clientele',       artist:'Ghostface Killah',    imageUrl:'https://upload.wikimedia.org/wikipedia/en/0/0c/Ghostface_-_supreme_clientele.jpg' },
+    { id:'53', name:'Wish You Were Here',      artist:'Pink Floyd',          imageUrl:'https://upload.wikimedia.org/wikipedia/en/f/f4/Pink_Floyd-_Wish_You_Were_Here_%281975%29.png' },
+    { id:'54', name:'Heroes',                  artist:'David Bowie',         imageUrl:'https://upload.wikimedia.org/wikipedia/en/8/8b/David-Bowie-Heroes.jpg' },
+    { id:'55', name:'Automatic for the People',artist:'R.E.M.',              imageUrl:'https://upload.wikimedia.org/wikipedia/en/2/25/AutomaticForThePeople.jpg' },
+    { id:'56', name:'Crooked Rain',            artist:'Pavement',            imageUrl:'https://upload.wikimedia.org/wikipedia/en/f/f1/Crooked_Rain%2C_Crooked_Rain_%28Pavement_album_-_cover_art%29.jpg' },
+    { id:'57', name:'Since I Left You',        artist:'The Avalanches',      imageUrl:'https://upload.wikimedia.org/wikipedia/en/5/5b/The_Avalanches_-_Since_I_Left_You.png' },
+    { id:'58', name:'Intl Player Anthem',      artist:'UGK',                 imageUrl:'https://upload.wikimedia.org/wikipedia/en/a/a0/Underground_Kingz_album.jpg' },
+    { id:'59', name:'Endtroducing.....',       artist:'DJ Shadow',           imageUrl:'https://upload.wikimedia.org/wikipedia/en/9/9e/Endtroducing.....jpg' },
+    { id:'60', name:'Aquemini',                artist:'Outkast',             imageUrl:'https://upload.wikimedia.org/wikipedia/en/c/c5/Aquemini.jpg' },
+    { id:'61', name:'Stankonia',               artist:'Outkast',             imageUrl:'https://upload.wikimedia.org/wikipedia/en/c/cd/Stankonia.jpg' },
+    { id:'62', name:'Madvillainy',             artist:'Madvillain',          imageUrl:'https://upload.wikimedia.org/wikipedia/en/8/8b/MadvillainMadvillainy.png' },
+    { id:'63', name:'Donuts',                  artist:'J Dilla',             imageUrl:'https://upload.wikimedia.org/wikipedia/en/4/45/J_Dilla_-_Donuts_%28cover%29.jpg' },
+    { id:'64', name:'Untrue',                  artist:'Burial',              imageUrl:'https://upload.wikimedia.org/wikipedia/en/4/4d/Burial_-_Untrue.png' },
+    { id:'65', name:'Selected Ambient Works',  artist:'Aphex Twin',          imageUrl:'https://upload.wikimedia.org/wikipedia/en/3/3a/Aphex_Twin_-_Selected_Ambient_Works_Volume_II.png' },
+    { id:'66', name:'Music Has the Right',     artist:'The Chemical Brothers',imageUrl:'https://upload.wikimedia.org/wikipedia/en/7/7a/Chemical_Brothers_-_Music_Has_the_Right_to_Children.png' },
+    { id:'67', name:'Homework',                artist:'Daft Punk',           imageUrl:'https://upload.wikimedia.org/wikipedia/en/0/01/Daft_Punk_-_Homework.png' },
+    { id:'68', name:'Blue Lines',              artist:'Massive Attack',      imageUrl:'https://upload.wikimedia.org/wikipedia/en/e/e1/Massive_Attack_Blue_Lines.png' },
+    { id:'69', name:'Maxinquaye',              artist:'Tricky',              imageUrl:'https://upload.wikimedia.org/wikipedia/en/e/e0/Tricky-Maxinquaye-cover.jpg' },
+    { id:'70', name:'Post',                    artist:'Björk',               imageUrl:'https://upload.wikimedia.org/wikipedia/en/c/c2/Bjork_-_Post.png' },
+  ];
 
-  let selectedPlaylistId   = null;
-  let selectedPlaylistName = null;
+  // Show playlist name + track count in the mockup
+  const nameEl = document.querySelector('.sp-playlist-name');
+  if (nameEl) nameEl.textContent = 'Sample Playlist';
+  const saveEl = document.querySelector('.sp-playlist-saves');
+  if (saveEl) saveEl.textContent = `${window._spotifyTracks.length} songs`;
 
-  // Hide app until auth check completes
-  if (appRoot) appRoot.style.display = 'none';
-  if (panelEl) panelEl.style.display = 'none';
-
-  async function initAuth() {
-    // Check for error param from OAuth redirect
-    const params = new URLSearchParams(location.search);
-    if (params.has('error')) {
-      history.replaceState({}, '', '/');
-    }
-
-    try {
-      const res = await fetch('/api/me');
-      if (!res.ok) {
-        showAuth();
-        return;
-      }
-      const user = await res.json();
-      showPlaylistPicker(user);
-    } catch {
-      showAuth();
-    }
-  }
-
-  function showAuth() {
-    authScreen.classList.remove('hidden');
-    playlistScreen.classList.add('hidden');
-    appRoot.style.display = 'none';
-    if (panelEl) panelEl.style.display = 'none';
-  }
-
-  async function showPlaylistPicker(user) {
-    authScreen.classList.add('hidden');
-    playlistScreen.classList.remove('hidden');
-    appRoot.style.display = 'none';
-    if (panelEl) panelEl.style.display = 'none';
-
-    // Show user info + logout link
-    document.getElementById('playlist-user').innerHTML =
-      `<span>Logged in as <strong style="color:#fff">${user.name || 'you'}</strong></span>
-       &nbsp;·&nbsp;<a href="/api/logout">Log out</a>`;
-
-    // Load playlists
-    const grid = document.getElementById('playlist-grid');
-    grid.innerHTML = '<div style="color:#535353;font-family:system-ui;font-size:14px;grid-column:1/-1;padding:24px 0;">Loading playlists…</div>';
-
-    try {
-      const res = await fetch('/api/playlists');
-      const playlists = await res.json();
-      grid.innerHTML = '';
-
-      for (const p of playlists) {
-        const item = document.createElement('div');
-        item.className = 'playlist-item';
-        item.innerHTML = `
-          ${p.image
-            ? `<img src="${p.image}" alt="${p.name}" loading="lazy">`
-            : `<div class="playlist-item-img-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="#535353"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`}
-          <div class="playlist-item-name">${p.name}</div>
-          <div class="playlist-item-count">${p.trackCount} songs</div>`;
-        item.addEventListener('click', () => selectPlaylist(p.id, p.name));
-        grid.appendChild(item);
-      }
-    } catch {
-      grid.innerHTML = '<div style="color:#B3B3B3;font-family:system-ui;font-size:14px;grid-column:1/-1;">Failed to load playlists.</div>';
-    }
-  }
-
-  async function selectPlaylist(playlistId, playlistName) {
-    selectedPlaylistId   = playlistId;
-    selectedPlaylistName = playlistName;
-
-    playlistScreen.classList.add('hidden');
-    appRoot.style.display = '';
-    if (panelEl) panelEl.style.display = '';
-
-    // Update playlist name in Spotify mockup
-    const nameEl = document.querySelector('.sp-playlist-name');
-    if (nameEl) nameEl.textContent = playlistName;
-
-    // Load real tracks
-    showOverlay('Loading tracks…');
-    try {
-      const res  = await fetch(`/api/tracks?playlistId=${playlistId}`);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      window._spotifyTracks = data;
-      // Update track count in mockup
-      const saveEl = document.querySelector('.sp-playlist-saves');
-      if (saveEl) saveEl.textContent = `${data.length} songs`;
-      hideOverlay();
-      await loadTracks();
-    } catch (err) {
-      hideOverlay();
-      alert('Failed to load tracks: ' + err.message);
-    }
-  }
-
-  // Override the tracks source used by the cover generator
-  window._spotifyTracks = null;
-
-  initAuth();
+  function showOverlay(msg) { setOverlay(true, msg); }
+  function hideOverlay()    { setOverlay(false); }
   </script>
   <script>
     const CANVAS_SIZE = 1000;
@@ -2069,12 +1909,7 @@
 
       setOverlay(false);
       render(true);
-      document.getElementById('btn-publish').disabled = false;
     }
-
-    // Called by auth flow once tracks are ready
-    function showOverlay(msg) { setOverlay(true, msg); }
-    function hideOverlay()    { setOverlay(false); }
 
     function setOverlay(show, msg = '') {
       document.getElementById('overlay-msg').textContent = msg;
@@ -2136,33 +1971,11 @@
       };
     }
 
-    // ── Push to Spotify ───────────────────────────────────────────────────────
     function setStatus(msg, type = '') {
       const el = document.getElementById('status');
       el.className = 'status ' + type;
       el.innerHTML = msg;
     }
-
-    document.getElementById('btn-publish').addEventListener('click', async () => {
-      const btn = document.getElementById('btn-publish');
-      btn.disabled = true;
-      setStatus('<span class="spinner"></span>Pushing…');
-      try {
-        const imageBase64 = canvas.toDataURL('image/jpeg', 0.95);
-        const res = await fetch('/api/push-cover', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ playlistId: selectedPlaylistId, imageBase64 }),
-        });
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
-        setStatus('Updated ✓', 'ok');
-      } catch (err) {
-        setStatus(err.message, 'err');
-      } finally {
-        btn.disabled = false;
-      }
-    });
 
     function exportCanvas(format) {
       const mime = format === 'jpg' ? 'image/jpeg' : 'image/png';
@@ -2387,7 +2200,7 @@
     frameState = coverInitState();
     applyTransform(false);
     updateVisibility('bubble');
-    // Tracks are loaded by the auth flow via selectPlaylist() → window._spotifyTracks → loadTracks()
+    loadTracks();
   </script>
 </body>
 </html>
