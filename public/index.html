@@ -39,33 +39,6 @@
     .canvas-wrap.dragging { cursor: grabbing; }
 
     /* ── View toggle (in panel header) ── */
-    .view-toggle {
-      display: flex;
-      gap: 2px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 100px;
-      padding: 2px;
-    }
-
-    .view-btn {
-      padding: 3px 10px;
-      border-radius: 100px;
-      border: none;
-      background: transparent;
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 10px;
-      font-weight: 500;
-      color: rgba(255,255,255,0.3);
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-
-    .view-btn.active {
-      background: rgba(255,255,255,0.09);
-      color: rgba(255,255,255,0.8);
-    }
-
     /* ── Cover-mode dim overlay ── */
     .sp-chrome-dim {
       position: absolute;
@@ -73,10 +46,12 @@
       background: rgba(0, 0, 0, 1);
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.35s ease;
+      transition: opacity 0.3s ease;
       z-index: 50;
     }
     .spotify-preview.cover-mode .sp-chrome-dim { opacity: 1; }
+    /* Peek: hovering outside the cover reveals Spotify at ~15% */
+    .spotify-preview.cover-mode .sp-chrome-dim.peek { opacity: 0.90; }
 
     /* Canvas floated above the dim overlay, pinned to cover slot coordinates */
     .sp-canvas-float {
@@ -94,11 +69,11 @@
     }
     .sp-canvas-float canvas { width: 100%; height: 100%; display: block; }
 
-    /* ── Spotify preview — exact Paper artboard: 1506×1159 ── */
+    /* ── Spotify preview — exact Paper artboard: 1506×992 ── */
     .spotify-preview {
       display: flex;
       width: 1506px;
-      height: 1159px;
+      height: 992px;
       border-radius: 8px;
       border: 1px solid #FFFFFF12;
       overflow: hidden;
@@ -308,12 +283,18 @@
     .sp-lib-thumb {
       width: 48px; height: 48px;
       border-radius: 4px;
-      background: #252525;
       flex-shrink: 0;
       overflow: hidden;
+      display: flex;
+      align-items: flex-end;
     }
 
-    .sp-lib-thumb.round { border-radius: 50%; }
+    .sp-lib-thumb-overlay {
+      background: #252525;
+      width: 48px; height: 48px;
+      flex-shrink: 0;
+      overflow: clip;
+    }
 
     .sp-lib-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 
@@ -351,13 +332,22 @@
     .sp-playlist-header {
       flex-shrink: 0;
       background-color: #650000;
-      background-image: linear-gradient(180deg,
-        rgba(101,0,0,0.95) 0%,
-        rgba(90,0,0,0.88) 15%,
-        rgba(75,0,0,0.75) 30%,
-        rgba(55,0,0,0.55) 50%,
-        rgba(35,0,0,0.30) 70%,
-        rgba(18,18,18,0) 100%
+      background-image: linear-gradient(in oklab 180deg,
+        oklab(51.2% 0.177 0.100) 0%,
+        oklab(47.6% 0.165 0.093 / 93%) 7.14%,
+        oklab(43.9% 0.152 0.086 / 86%) 14.29%,
+        oklab(40.1% 0.139 0.078 / 79%) 21.43%,
+        oklab(36.5% 0.127 0.071 / 71%) 28.57%,
+        oklab(33% 0.114 0.065 / 64%) 35.71%,
+        oklab(29.2% 0.101 0.057 / 57%) 42.86%,
+        oklab(25.7% 0.089 0.050 / 50%) 50%,
+        oklab(21.8% 0.076 0.042 / 43%) 57.14%,
+        oklab(18.4% 0.063 0.037 / 36%) 64.29%,
+        oklab(14.5% 0.052 0.029 / 29%) 71.43%,
+        oklab(10.9% 0.039 0.022 / 21%) 78.57%,
+        oklab(7.2% 0.026 0.014 / 14%) 85.71%,
+        oklab(4.2% 0.015 0.008 / 7%) 92.86%,
+        oklab(0% 0 0 / 0%) 100%
       );
       padding-inline: 24px;
       padding-top: 40px;
@@ -410,41 +400,73 @@
 
     /* Controls row — padding 24px, height 104px */
     .sp-controls {
-      display: flex; align-items: center; gap: 16px;
+      display: flex; align-items: center; gap: 24px;
       padding: 24px; height: 104px; flex-shrink: 0;
-      background: #121212;
+      position: relative; z-index: 2;
     }
 
-    /* Play button — 56×56px, #1ED760 */
     .sp-play-btn {
       width: 56px; height: 56px;
-      border-radius: 9999px;
+      border-radius: calc(infinity * 1px);
       background: #1ED760;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
 
-    .sp-ctrl-icon {
-      width: 20px; height: 20px;
-      color: #B3B3B3;
+    .sp-ctrl-icon-wrap {
+      display: flex; align-items: center; justify-content: center;
+      border-radius: calc(infinity * 1px);
       flex-shrink: 0;
     }
 
     .sp-mix-btn {
-      display: flex; align-items: center; gap: 6px;
-      border: 1px solid rgba(255,255,255,0.3); border-radius: 9999px;
-      padding: 5px 14px; font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid #7C7C7C; border-radius: calc(infinity * 1px);
+      padding: 4px 16px 4px 36px;
+      font-size: 14px; font-weight: 700; line-height: 18px;
       color: #fff; font-family: system-ui, sans-serif;
+      position: relative; min-height: 32px; flex-shrink: 0;
+    }
+
+    .sp-list-btn {
+      display: flex; align-items: center; gap: 8px;
+      border-radius: 4px; height: 32px; padding: 0 8px;
+      flex-grow: 1; justify-content: flex-end;
+      font-size: 14px; line-height: 18px;
+      color: rgba(255,255,255,0.7); font-family: system-ui, sans-serif;
     }
 
     /* Track list — no padding, rows handle their own spacing */
+    .sp-track-section { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
     .sp-tracklist { flex: 1; overflow: hidden; }
+    .sp-tracklist-gradient {
+      position: absolute; left: 0; top: 0;
+      width: 1096px; height: 173px;
+      pointer-events: none; z-index: 1;
+      background: linear-gradient(in oklab 180deg,
+        oklab(31.8% 0.114 0.064 / 70%) 0%,
+        oklab(29.6% 0.106 0.059 / 65%) 7.14%,
+        oklab(27.3% 0.098 0.055 / 60%) 14.29%,
+        oklab(25% 0.089 0.050 / 55%) 21.43%,
+        oklab(22.8% 0.082 0.046 / 50%) 28.57%,
+        oklab(20.4% 0.073 0.041 / 45%) 35.71%,
+        oklab(18.2% 0.065 0.036 / 40%) 42.86%,
+        oklab(15.8% 0.057 0.032 / 35%) 50%,
+        oklab(13.7% 0.049 0.027 / 30%) 57.14%,
+        oklab(11.4% 0.041 0.023 / 25%) 64.29%,
+        oklab(9.1% 0.033 0.018 / 20%) 71.43%,
+        oklab(6.7% 0.024 0.013 / 15%) 78.57%,
+        oklab(4.2% 0.015 0.008 / 10%) 85.71%,
+        oklab(0% 0 0 / 5%) 92.86%,
+        oklab(0% 0 0 / 0%) 100%
+      );
+    }
     .sp-track-rows { padding-top: 16px; }
 
     /* Track header — 36px, columns absolutely positioned */
     .sp-track-header {
       position: relative;
-      height: 36px;
+      height: 37px;
       border-bottom: 1px solid rgba(255,255,255,0.1);
       margin-bottom: 0;
     }
@@ -913,9 +935,138 @@
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
+  /* ── Auth & playlist picker screens ── */
+  .auth-screen {
+    position: fixed; inset: 0; z-index: 1000;
+    background: #000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .auth-screen.hidden { display: none; }
+
+  .auth-card {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 20px; max-width: 420px; width: 100%; padding: 48px 40px;
+    text-align: center;
+  }
+  .auth-logo {
+    display: flex; align-items: center; gap: 10px;
+    color: #fff; font-size: 15px; font-weight: 700;
+    font-family: system-ui, sans-serif; letter-spacing: -0.01em;
+  }
+  .auth-title {
+    font-size: 42px; font-weight: 900; line-height: 1.1;
+    color: #fff; font-family: system-ui, sans-serif;
+    letter-spacing: -0.03em;
+  }
+  .auth-sub {
+    font-size: 15px; line-height: 1.6; color: #B3B3B3;
+    font-family: system-ui, sans-serif;
+  }
+  .auth-btn {
+    display: flex; align-items: center; gap: 10px;
+    background: #1ED760; color: #000;
+    font-size: 14px; font-weight: 700;
+    font-family: system-ui, sans-serif;
+    padding: 14px 32px; border-radius: 500px;
+    text-decoration: none; transition: transform 0.15s, background 0.15s;
+    letter-spacing: 0.01em;
+  }
+  .auth-btn:hover { background: #1fdf64; transform: scale(1.03); }
+  .auth-note {
+    font-size: 12px; color: #535353;
+    font-family: system-ui, sans-serif;
+  }
+
+  /* Playlist picker */
+  .playlist-card {
+    display: flex; flex-direction: column;
+    width: 780px; max-width: 95vw;
+    max-height: 90vh; padding: 40px 40px 32px;
+    gap: 24px;
+  }
+  .playlist-header {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .playlist-user {
+    font-size: 13px; color: #B3B3B3;
+    font-family: system-ui, sans-serif;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .playlist-user a {
+    color: #B3B3B3; font-size: 13px; font-family: system-ui, sans-serif;
+    text-decoration: none;
+  }
+  .playlist-user a:hover { color: #fff; }
+  .playlist-title {
+    font-size: 28px; font-weight: 800; color: #fff;
+    font-family: system-ui, sans-serif; letter-spacing: -0.02em;
+  }
+  .playlist-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    overflow-y: auto; max-height: calc(90vh - 200px);
+    padding-right: 4px;
+  }
+  .playlist-grid::-webkit-scrollbar { width: 4px; }
+  .playlist-grid::-webkit-scrollbar-track { background: transparent; }
+  .playlist-grid::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+  .playlist-item {
+    display: flex; flex-direction: column; gap: 8px;
+    cursor: pointer; padding: 12px; border-radius: 8px;
+    background: #111; transition: background 0.15s;
+  }
+  .playlist-item:hover { background: #1a1a1a; }
+  .playlist-item img {
+    width: 100%; aspect-ratio: 1; object-fit: cover;
+    border-radius: 4px; background: #282828;
+  }
+  .playlist-item-img-placeholder {
+    width: 100%; aspect-ratio: 1; border-radius: 4px;
+    background: #282828; display: flex; align-items: center; justify-content: center;
+  }
+  .playlist-item-name {
+    font-size: 13px; font-weight: 600; color: #fff;
+    font-family: system-ui, sans-serif;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .playlist-item-count {
+    font-size: 12px; color: #B3B3B3;
+    font-family: system-ui, sans-serif;
+  }
   </style>
 </head>
 <body>
+
+  <!-- ── Auth screens ─────────────────────────────────────────── -->
+  <div id="auth-screen" class="auth-screen hidden">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="#1ED760"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        <span>Cover Generator</span>
+      </div>
+      <h1 class="auth-title">Generate a cover<br>for any playlist.</h1>
+      <p class="auth-sub">Connect your Spotify account, pick a playlist, and create a unique mosaic cover from your album art.</p>
+      <a href="/api/login" class="auth-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        Connect with Spotify
+      </a>
+      <p class="auth-note">We only request permission to read your playlists and update playlist covers.</p>
+    </div>
+  </div>
+
+  <!-- ── Playlist picker ───────────────────────────────────────── -->
+  <div id="playlist-screen" class="auth-screen hidden">
+    <div class="playlist-card">
+      <div class="playlist-header">
+        <div class="auth-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#1ED760"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+          <span>Cover Generator</span>
+        </div>
+        <div id="playlist-user" class="playlist-user"></div>
+      </div>
+      <h2 class="playlist-title">Pick a playlist</h2>
+      <div id="playlist-grid" class="playlist-grid"></div>
+    </div>
+  </div>
 
   <!-- Centered canvas -->
   <div class="canvas-wrap">
@@ -950,20 +1101,24 @@
                 </div>
               </div>
             </div>
-            <!-- Search bar: 490×48, bg #1F1F1F, border-radius 500px, paddingLeft 48px paddingRight 96px -->
+            <!-- Search bar: 1F5-0 -->
             <div style="padding-inline:8px;display:flex;flex-direction:column;flex-shrink:0;position:relative;width:490px;">
-              <div style="background:#1F1F1F;border-radius:500px;height:48px;overflow:hidden;padding:12px 96px 12px 48px;width:474px;display:flex;align-items:center;">
-                <span style="font-size:16px;line-height:20px;color:#B3B3B3;font-family:system-ui,sans-serif;">What do you want to play?</span>
+              <div style="align-items:flex-start;background:#1F1F1F;border-radius:500px;box-sizing:border-box;display:flex;flex-direction:column;flex-shrink:0;height:48px;justify-content:center;min-height:48px;overflow:clip;padding-block:12px;padding-left:48px;padding-right:96px;width:474px;">
+                <div style="align-self:stretch;box-sizing:border-box;color:#B3B3B3;font-family:system-ui,sans-serif;font-size:16px;line-height:20px;min-width:0px;width:330px;">What do you want to play?</div>
               </div>
-              <!-- Search icon: absolute left:8, 24×24 -->
-              <div style="position:absolute;left:20px;top:0;width:48px;height:48px;display:flex;align-items:center;justify-content:center;">
-                <div style="width:24px;height:24px;overflow:hidden;position:relative;">
-                  <svg viewBox="0 0 21.37 21.15" width="21.37" height="21.15" xmlns="http://www.w3.org/2000/svg" style="position:absolute;left:5.42%;top:5.94%;overflow:visible;"><path d="M9.407 0.000C4.226 0.000 0.000 4.140 0.000 9.279C0.000 14.418 4.226 18.558 9.407 18.558C11.641 18.558 13.698 17.788 15.314 16.500C15.314 16.500 19.667 20.853 19.667 20.853C20.057 21.244 20.691 21.244 21.081 20.853C21.472 20.463 21.472 19.829 21.081 19.439C21.081 19.439 16.737 15.095 16.737 15.095C18.036 13.506 18.814 11.484 18.814 9.279C18.814 4.140 14.588 0.000 9.407 0.000ZM2.000 9.279C2.000 5.273 5.302 2.000 9.407 2.000C13.512 2.000 16.814 5.273 16.814 9.279C16.814 13.285 13.512 16.558 9.407 16.558C5.302 16.558 2.000 13.285 2.000 9.279Z" fill-rule="nonzero" fill="#B3B3B3"/></svg>
+              <!-- Browse icon divider: left:429, top:11.5, w:41, h:25 -->
+              <div style="border-left:1px solid #7C7C7C;box-sizing:border-box;height:25px;left:429px;position:absolute;top:11.5px;width:41px;">
+                <svg layerName="Button - Browse" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" style="left:12px;top:0.7695px;width:24px;height:24px;overflow:visible;border-radius:calc(infinity * 1px);position:absolute;">
+                  <g><g><path transform="matrix(1 0 0 1 9 13.5)" d="M6.000 2.000C6.000 3.105 4.657 4.000 3.000 4.000C1.343 4.000 0.000 3.105 0.000 2.000C0.000 0.895 1.343 0.000 3.000 0.000C4.657 0.000 6.000 0.895 6.000 2.000Z" fill-rule="nonzero" fill="#B3B3B3"/><path transform="matrix(1 0 0 1 1.291 1)" d="M0.222 8.370C0.316 8.254 0.434 8.161 0.569 8.097C0.704 8.033 0.851 8.000 1.000 8.000C1.000 8.000 20.418 8.000 20.418 8.000C20.567 8.000 20.714 8.033 20.849 8.097C20.983 8.161 21.102 8.255 21.196 8.370C21.289 8.486 21.356 8.621 21.391 8.766C21.426 8.911 21.428 9.062 21.397 9.208C21.397 9.208 19.058 20.208 19.058 20.208C19.010 20.432 18.887 20.633 18.709 20.777C18.531 20.921 18.309 21.000 18.080 21.000C18.080 21.000 3.339 21.000 3.339 21.000C3.110 21.000 2.888 20.921 2.710 20.777C2.532 20.633 2.408 20.432 2.361 20.208C2.361 20.208 0.022 9.208 0.022 9.208C-0.009 9.062 -0.007 8.912 0.028 8.767C0.062 8.622 0.129 8.487 0.223 8.371ZM2.234 10.000C2.234 10.000 4.147 19.000 4.147 19.000C4.147 19.000 17.270 19.000 17.270 19.000C17.270 19.000 19.183 10.000 19.183 10.000ZM2.709 1.000C2.709 0.735 2.814 0.480 3.002 0.293C3.189 0.105 3.444 0.000 3.709 0.000C3.709 0.000 17.709 0.000 17.709 0.000C17.974 0.000 18.228 0.105 18.416 0.293C18.603 0.480 18.709 0.735 18.709 1.000C18.709 1.000 18.709 5.000 18.709 5.000C18.709 5.000 16.709 5.000 16.709 5.000C16.709 5.000 16.709 2.000 16.709 2.000C16.709 2.000 4.709 2.000 4.709 2.000C4.709 2.000 4.709 5.000 4.709 5.000C4.709 5.000 2.709 5.000 2.709 5.000Z" fill-rule="nonzero" fill="#B3B3B3"/></g></g>
+                </svg>
+              </div>
+              <!-- Search icon: left:8, top:0, padding:12 -->
+              <div style="align-items:center;border-radius:calc(infinity * 1px);box-sizing:border-box;display:flex;gap:8px;height:48px;justify-content:center;left:8px;padding:12px;position:absolute;top:0px;">
+                <div style="align-items:flex-start;box-sizing:border-box;display:flex;">
+                  <div style="box-sizing:border-box;flex-shrink:0;height:24px;overflow:clip;position:relative;width:24px;">
+                    <svg viewBox="0 0 21.37 21.15" preserveAspectRatio="none" width="21.37" height="21.15" xmlns="http://www.w3.org/2000/svg" style="width:round(89.0583%, 1px);height:round(88.1084%, 1px);left:4.69158%;top:5.32887%;overflow:visible;position:absolute;"><path d="M9.407 0.000C4.226 0.000 0.000 4.140 0.000 9.279C0.000 14.418 4.226 18.558 9.407 18.558C11.641 18.558 13.698 17.788 15.314 16.500C15.314 16.500 19.667 20.853 19.667 20.853C20.057 21.244 20.691 21.244 21.081 20.853C21.472 20.463 21.472 19.829 21.081 19.439C21.081 19.439 16.737 15.095 16.737 15.095C18.036 13.506 18.814 11.484 18.814 9.279C18.814 4.140 14.588 0.000 9.407 0.000ZM2.000 9.279C2.000 5.273 5.302 2.000 9.407 2.000C13.512 2.000 16.814 5.273 16.814 9.279C16.814 13.285 13.512 16.558 9.407 16.558C5.302 16.558 2.000 13.285 2.000 9.279Z" fill-rule="nonzero" fill="#B3B3B3"/></svg>
+                  </div>
                 </div>
-              </div>
-              <!-- Browse icon + divider: absolute right -->
-              <div style="position:absolute;right:20px;top:11.5px;height:25px;border-left:1px solid #7C7C7C;display:flex;align-items:center;padding-left:12px;">
-                <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;border-radius:9999px;"><g><g><path transform="matrix(1 0 0 1 9 13.5)" d="M6.000 2.000C6.000 3.105 4.657 4.000 3.000 4.000C1.343 4.000 0.000 3.105 0.000 2.000C0.000 0.895 1.343 0.000 3.000 0.000C4.657 0.000 6.000 0.895 6.000 2.000Z" fill-rule="nonzero" fill="#B3B3B3"/><path transform="matrix(1 0 0 1 1.291 1)" d="M0.222 8.370C0.316 8.254 0.434 8.161 0.569 8.097C0.704 8.033 0.851 8.000 1.000 8.000C1.000 8.000 20.418 8.000 20.418 8.000C20.567 8.000 20.714 8.033 20.849 8.097C20.983 8.161 21.102 8.255 21.196 8.370C21.289 8.486 21.356 8.621 21.391 8.766C21.426 8.911 21.428 9.062 21.397 9.208C21.397 9.208 19.058 20.208 19.058 20.208C19.010 20.432 18.887 20.633 18.709 20.777C18.531 20.921 18.309 21.000 18.080 21.000C18.080 21.000 3.339 21.000 3.339 21.000C3.110 21.000 2.888 20.921 2.710 20.777C2.532 20.633 2.408 20.432 2.361 20.208C2.361 20.208 0.022 9.208 0.022 9.208C-0.009 9.062 -0.007 8.912 0.028 8.767C0.062 8.622 0.129 8.487 0.223 8.371ZM2.234 10.000C2.234 10.000 4.147 19.000 4.147 19.000C4.147 19.000 17.270 19.000 17.270 19.000C17.270 19.000 19.183 10.000 19.183 10.000ZM2.709 1.000C2.709 0.735 2.814 0.480 3.002 0.293C3.189 0.105 3.444 0.000 3.709 0.000C3.709 0.000 17.709 0.000 17.709 0.000C17.974 0.000 18.228 0.105 18.416 0.293C18.603 0.480 18.709 0.735 18.709 1.000C18.709 1.000 18.709 5.000 18.709 5.000C18.709 5.000 16.709 5.000 16.709 5.000C16.709 5.000 16.709 2.000 16.709 2.000C16.709 2.000 4.709 2.000 4.709 2.000C4.709 2.000 4.709 5.000 4.709 5.000C4.709 5.000 2.709 5.000 2.709 5.000Z" fill-rule="nonzero" fill="#B3B3B3"/></g></g></svg>
               </div>
             </div>
           </div>
@@ -1008,12 +1163,20 @@
             <span class="sp-lib-title">Your Library</span>
             <div style="display:flex;gap:8px;align-items:center;">
               <!-- + Create button -->
-              <div style="width:35px;height:35px;background:#1F1F1F;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="14" height="14" viewBox="0 0 14.5 14.5" fill="#B3B3B3"><path d="M14.5 7.25a.75.75 0 01-.75.75H8v5.75a.75.75 0 01-1.5 0V8H.75a.75.75 0 010-1.5H6.5V.75a.75.75 0 011.5 0V6.5h5.75a.75.75 0 01.75.75z" fill-rule="nonzero"/></svg>
+              <div style="width:35px;height:35px;background:#1F1F1F;border-radius:calc(infinity * 1px);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <div style="width:16px;height:16px;overflow:clip;position:relative;flex-shrink:0;">
+                  <svg layerName="Vector" viewBox="0 0 14.5 14.5" width="14.5" height="14.5" xmlns="http://www.w3.org/2000/svg" style="width:round(90.625%,1px);height:round(90.625%,1px);left:4.6875%;top:4.6875%;overflow-x:visible;overflow-y:visible;position:absolute;">
+                    <path d="M14.500 7.250C14.500 7.449 14.421 7.640 14.280 7.780C14.140 7.921 13.949 8.000 13.750 8.000C13.750 8.000 8.000 8.000 8.000 8.000C8.000 8.000 8.000 13.750 8.000 13.750C8.000 13.949 7.921 14.140 7.780 14.280C7.640 14.421 7.449 14.500 7.250 14.500C7.051 14.500 6.860 14.421 6.720 14.280C6.579 14.140 6.500 13.949 6.500 13.750C6.500 13.750 6.500 8.000 6.500 8.000C6.500 8.000 0.750 8.000 0.750 8.000C0.551 8.000 0.360 7.921 0.220 7.780C0.079 7.640 0.000 7.449 0.000 7.250C0.000 7.051 0.079 6.860 0.220 6.720C0.360 6.579 0.551 6.500 0.750 6.500C0.750 6.500 6.500 6.500 6.500 6.500C6.500 6.500 6.500 0.750 6.500 0.750C6.500 0.551 6.579 0.360 6.720 0.220C6.860 0.079 7.051 0.000 7.250 0.000C7.449 0.000 7.640 0.079 7.780 0.220C7.921 0.360 8.000 0.551 8.000 0.750C8.000 0.750 8.000 6.500 8.000 6.500C8.000 6.500 13.750 6.500 13.750 6.500C13.949 6.500 14.140 6.579 14.280 6.720C14.421 6.860 14.500 7.051 14.500 7.250Z" fill-rule="nonzero" fill="#B3B3B3"/>
+                  </svg>
+                </div>
               </div>
               <!-- Expand button -->
-              <div style="width:35px;height:35px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="13" height="13" viewBox="0 0 13.5 13.5" fill="#B3B3B3"><path d="M5.28 8.22a.75.75 0 010 1.06L2.56 12l1.018.001a.75.75 0 010 1.499H0V9.921a.75.75 0 011.5 0v1.018l2.72-2.72a.75.75 0 011.06 0zM8.22 5.28a.75.75 0 010-1.06L10.94 1.5H9.922a.75.75 0 010-1.5H13.5v3.579a.75.75 0 01-1.5 0V2.56L9.28 5.28a.75.75 0 01-1.06 0z" fill-rule="nonzero"/></svg>
+              <div style="width:35px;height:35px;border-radius:calc(infinity * 1px);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <div style="width:16px;height:16px;overflow:clip;position:relative;flex-shrink:0;">
+                  <svg layerName="Vector" viewBox="0 0 13.5 13.5" width="13.5" height="13.5" xmlns="http://www.w3.org/2000/svg" style="width:round(84.375%,1px);height:round(84.375%,1px);left:7.8125%;top:7.8125%;overflow-x:visible;overflow-y:visible;position:absolute;">
+                    <path d="M5.280 8.220C5.420 8.361 5.499 8.551 5.499 8.750C5.499 8.949 5.420 9.139 5.280 9.280C5.280 9.280 2.560 12.000 2.560 12.000C2.560 12.000 3.578 12.000 3.578 12.000C3.777 12.000 3.968 12.079 4.108 12.220C4.249 12.360 4.328 12.551 4.328 12.750C4.328 12.949 4.249 13.140 4.108 13.280C3.968 13.421 3.777 13.500 3.578 13.500C3.578 13.500 0.000 13.500 0.000 13.500C0.000 13.500 0.000 9.921 0.000 9.921C0.000 9.722 0.079 9.531 0.220 9.391C0.360 9.250 0.551 9.171 0.750 9.171C0.949 9.171 1.140 9.250 1.280 9.391C1.421 9.531 1.500 9.722 1.500 9.921C1.500 9.921 1.500 10.939 1.500 10.939C1.500 10.939 4.220 8.219 4.220 8.219C4.361 8.079 4.551 8.000 4.750 8.000C4.949 8.000 5.139 8.079 5.280 8.219C5.280 8.219 5.280 8.220 5.280 8.220ZM8.220 5.280C8.080 5.139 8.001 4.949 8.001 4.750C8.001 4.551 8.080 4.361 8.220 4.220C8.220 4.220 10.940 1.500 10.940 1.500C10.940 1.500 9.922 1.500 9.922 1.500C9.824 1.500 9.726 1.481 9.635 1.443C9.544 1.405 9.461 1.350 9.392 1.280C9.322 1.211 9.267 1.128 9.229 1.037C9.191 0.946 9.172 0.848 9.172 0.750C9.172 0.652 9.191 0.554 9.229 0.463C9.267 0.372 9.322 0.289 9.392 0.220C9.461 0.150 9.544 0.095 9.635 0.057C9.726 0.019 9.824 -0.000 9.922 0.000C9.922 0.000 13.500 0.000 13.500 0.000C13.500 0.000 13.500 3.579 13.500 3.579C13.500 3.778 13.421 3.969 13.280 4.109C13.140 4.250 12.949 4.329 12.750 4.329C12.551 4.329 12.360 4.250 12.220 4.109C12.079 3.969 12.000 3.778 12.000 3.579C12.000 3.579 12.000 2.560 12.000 2.560C12.000 2.560 9.280 5.280 9.280 5.280C9.139 5.420 8.949 5.499 8.750 5.499C8.551 5.499 8.361 5.420 8.220 5.280Z" fill-rule="nonzero" fill="#B3B3B3"/>
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
@@ -1028,100 +1191,146 @@
           <div style="padding: 0 8px 8px; display: flex; flex-direction: column; gap: 8px;">
             <div class="sp-lib-sort">
               <div class="sp-lib-sort-search">
-                <svg viewBox="0 0 15.52 15.35" width="16" height="16" xmlns="http://www.w3.org/2000/svg"><path d="M6.750 1.501C6.061 1.501 5.378 1.637 4.741 1.901C4.104 2.164 3.525 2.551 3.038 3.039C2.550 3.526 2.163 4.105 1.900 4.742C1.636 5.379 1.500 6.062 1.500 6.751C1.500 7.440 1.636 8.123 1.900 8.760C2.163 9.397 2.550 9.976 3.038 10.463C3.525 10.951 4.104 11.338 4.741 11.601C5.378 11.865 6.061 12.001 6.750 12.001C8.142 12.001 9.478 11.448 10.462 10.463C11.447 9.479 12.000 8.143 12.000 6.751C12.000 5.359 11.447 4.023 10.462 3.039C9.478 2.054 8.142 1.501 6.750 1.501ZM0.000 6.751C-0.000 5.678 0.256 4.620 0.746 3.665C1.237 2.710 1.948 1.886 2.821 1.262C3.693 0.637 4.703 0.229 5.764 0.072C6.826 -0.084 7.910 0.014 8.926 0.360C9.942 0.707 10.861 1.290 11.607 2.062C12.352 2.835 12.903 3.773 13.213 4.801C13.522 5.829 13.583 6.915 13.389 7.971C13.194 9.027 12.751 10.021 12.096 10.871L15.280 14.056a.75.75 0 01-1.060 1.060L10.054 11.95C9.067 12.768 7.868 13.287 6.597 13.448C5.326 13.609 4.036 13.404 2.877 12.859C1.718 12.314 0.737 11.450 0.051 10.368C-0.636 9.287 -0.000 8.032 0.000 6.751Z" fill-rule="nonzero" fill="rgba(255,255,255,0.7)"/></svg>
+                <div style="width:16px;height:16px;overflow:clip;position:relative;flex-shrink:0;">
+                  <svg layerName="Vector" viewBox="0 0 15.52 15.35" preserveAspectRatio="none" width="15.52" height="15.35" xmlns="http://www.w3.org/2000/svg" style="width:round(96.9919%,1px);height:round(95.967%,1px);left:1.5041%;top:2.0163%;overflow-x:visible;overflow-y:visible;position:absolute;">
+                    <path d="M6.750 1.501C6.061 1.501 5.378 1.637 4.741 1.901C4.104 2.164 3.525 2.551 3.038 3.039C2.550 3.526 2.163 4.105 1.900 4.742C1.636 5.379 1.500 6.062 1.500 6.751C1.500 7.440 1.636 8.123 1.900 8.760C2.163 9.397 2.550 9.976 3.038 10.463C3.525 10.951 4.104 11.338 4.741 11.601C5.378 11.865 6.061 12.001 6.750 12.001C8.142 12.001 9.478 11.448 10.462 10.463C11.447 9.479 12.000 8.143 12.000 6.751C12.000 5.359 11.447 4.023 10.462 3.039C9.478 2.054 8.142 1.501 6.750 1.501ZM0.000 6.751C-0.000 5.678 0.256 4.620 0.746 3.665C1.237 2.710 1.948 1.886 2.821 1.262C3.693 0.637 4.703 0.229 5.764 0.072C6.826 -0.084 7.910 0.014 8.926 0.360C9.942 0.707 10.861 1.290 11.607 2.062C12.352 2.835 12.903 3.773 13.213 4.801C13.522 5.829 13.583 6.915 13.389 7.971C13.194 9.027 12.751 10.021 12.096 10.871C12.096 10.871 15.280 14.056 15.280 14.056C15.354 14.125 15.413 14.207 15.454 14.299C15.495 14.391 15.517 14.491 15.519 14.591C15.520 14.692 15.502 14.792 15.464 14.886C15.426 14.979 15.370 15.064 15.299 15.135C15.228 15.206 15.143 15.262 15.050 15.300C14.956 15.338 14.856 15.356 14.755 15.355C14.655 15.353 14.555 15.331 14.463 15.290C14.371 15.249 14.289 15.190 14.220 15.116C14.220 15.116 11.054 11.951 11.054 11.951C10.067 12.768 8.868 13.287 7.597 13.448C6.326 13.609 5.036 13.404 3.877 12.859C2.718 12.314 1.737 11.450 1.051 10.368C0.364 9.287 -0.000 8.032 0.000 6.751Z" fill-rule="nonzero" fill="rgb(255 255 255 / 70%)"/>
+                  </svg>
+                </div>
               </div>
               <div class="sp-lib-sort-recents">
                 <span>Recents</span>
-                <svg viewBox="0 0 14 13" width="16" height="16" xmlns="http://www.w3.org/2000/svg"><path d="M14 13H4v-1.5h10V13zm0-5.75H4V5.75h10v1.5zm0-5.75H4V0h10v1.5zM2 1.5H0V0h2v1.5zm0 11.5H0v-1.5h2V13zm0-5.75H0V5.75h2v1.5z" fill-rule="nonzero" fill="#B3B3B3"/></svg>
+                <div style="width:16px;height:16px;overflow:clip;position:relative;flex-shrink:0;">
+                  <svg layerName="Vector" viewBox="0 0 14 13" width="14" height="13" xmlns="http://www.w3.org/2000/svg" style="width:round(87.5%,1px);height:round(81.25%,1px);left:6.25%;top:9.375%;overflow-x:visible;overflow-y:visible;position:absolute;">
+                    <path d="M14.000 13.000C14.000 13.000 4.000 13.000 4.000 13.000C4.000 13.000 4.000 11.500 4.000 11.500C4.000 11.500 14.000 11.500 14.000 11.500C14.000 11.500 14.000 13.000 14.000 13.000ZM14.000 7.250C14.000 7.250 4.000 7.250 4.000 7.250C4.000 7.250 4.000 5.750 4.000 5.750C4.000 5.750 14.000 5.750 14.000 5.750C14.000 5.750 14.000 7.250 14.000 7.250ZM14.000 1.500C14.000 1.500 4.000 1.500 4.000 1.500C4.000 1.500 4.000 0.000 4.000 0.000C4.000 0.000 14.000 0.000 14.000 0.000C14.000 0.000 14.000 1.500 14.000 1.500ZM2.000 1.500C2.000 1.500 0.000 1.500 0.000 1.500C0.000 1.500 0.000 0.000 0.000 0.000C0.000 0.000 2.000 0.000 2.000 0.000C2.000 0.000 2.000 1.500 2.000 1.500ZM2.000 13.000C2.000 13.000 0.000 13.000 0.000 13.000C0.000 13.000 0.000 11.500 0.000 11.500C0.000 11.500 2.000 11.500 2.000 11.500C2.000 11.500 2.000 13.000 2.000 13.000ZM2.000 7.250C2.000 7.250 0.000 7.250 0.000 7.250C0.000 7.250 0.000 5.750 0.000 5.750C0.000 5.750 2.000 5.750 2.000 5.750C2.000 5.750 2.000 7.250 2.000 7.250Z" fill-rule="nonzero" fill="#B3B3B3"/>
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
-          <!-- List items: height 64px, thumbnail 48×48 -->
+          <!-- List items: height 64px, thumbnail 48×48 — per Paper node 1HW-0 -->
           <div class="sp-lib-list">
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb" style="background:#5018F0;display:flex;align-items:center;justify-content:center;">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="#1ED760"><path d="M6.602.598a1 1 0 00-1.204 0L.103 4.359l3.364 3.364L.151 11.04a.553.553 0 00.795.795l3.316-3.316 3.365 3.365 3.757-3.757a1 1 0 000-1.342L7.627 11.883 6.602.598z" fill-rule="nonzero"/></svg>
-              </div>
+              <div class="sp-lib-thumb" style="background:#5018F0;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">Liked Songs</span>
-                <span class="sp-lib-sub">Playlist · 23 songs</span>
+                <div style="display:flex;align-items:center;align-self:stretch;">
+                  <div style="flex-shrink:0;height:12px;padding-right:4px;width:16px;">
+                    <div style="height:12px;overflow:clip;position:relative;width:12px;">
+                      <svg layerName="Vector" viewBox="0 0 11.99 11.99" width="11.99" height="11.99" xmlns="http://www.w3.org/2000/svg" style="width:round(99.8852%,1px);height:round(99.8821%,1px);overflow-x:visible;overflow-y:visible;position:absolute;">
+                        <path d="M6.602 0.598C6.792 0.408 7.017 0.258 7.264 0.155C7.512 0.053 7.777 -0.000 8.045 0.000C8.313 -0.000 8.578 0.053 8.826 0.155C9.073 0.258 9.298 0.408 9.488 0.598C9.488 0.598 11.388 2.497 11.388 2.497C11.578 2.687 11.728 2.912 11.831 3.159C11.933 3.407 11.986 3.672 11.986 3.940C11.986 4.208 11.933 4.474 11.831 4.721C11.728 4.969 11.578 5.194 11.388 5.383C11.388 5.383 8.630 8.142 8.630 8.142C8.630 8.142 7.627 11.883 7.627 11.883C7.627 11.883 4.262 8.518 4.262 8.518C4.262 8.518 0.946 11.835 0.946 11.835C0.839 11.934 0.698 11.988 0.553 11.986C0.407 11.983 0.268 11.924 0.165 11.821C0.062 11.718 0.003 11.579 0.000 11.433C-0.002 11.288 0.052 11.147 0.151 11.040C0.151 11.040 3.467 7.723 3.467 7.723C3.467 7.723 0.103 4.359 0.103 4.359C0.103 4.359 3.843 3.356 3.843 3.356C3.843 3.356 6.602 0.598 6.602 0.598Z" fill-rule="nonzero" fill="#1ED760"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="sp-lib-sub">Playlist • 23 songs</span>
+                </div>
               </div>
             </div>
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb" style="background:#004050;"></div>
+              <div class="sp-lib-thumb" style="background:#004050;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">ionnalee's MOUTH OF A RIVER, pt. 2</span>
-                <span class="sp-lib-sub">Album · ionnalee</span>
+                <span class="sp-lib-sub">Album • ionnalee</span>
               </div>
             </div>
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb round" style="background:#457C9F;"></div>
+              <div class="sp-lib-thumb" style="background:#457C9F;box-shadow:#00000080 0px 4px 60px;border-radius:24px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">Daisy*</span>
                 <span class="sp-lib-sub">Artist</span>
               </div>
             </div>
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb round" style="background:#72777D;"></div>
+              <div class="sp-lib-thumb" style="background:#72777D;box-shadow:#00000080 0px 4px 60px;border-radius:24px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">Memphis LK</span>
                 <span class="sp-lib-sub">Artist</span>
               </div>
             </div>
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb round" style="background:#717878;"></div>
+              <div class="sp-lib-thumb" style="background:#717878;box-shadow:#00000080 0px 4px 60px;border-radius:24px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">Linnea Awad</span>
                 <span class="sp-lib-sub">Artist</span>
               </div>
             </div>
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb" style="background:#68778E;"></div>
+              <div class="sp-lib-thumb" style="background:#68778E;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">LONDON'S LAST SWEETHEART LOST RECORDINGS</span>
-                <span class="sp-lib-sub">EP · LAUREL</span>
+                <span class="sp-lib-sub">EP • LAUREL</span>
               </div>
             </div>
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb" style="background:#357F99;"></div>
+              <div class="sp-lib-thumb" style="background:#357F99;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">Jukebox Dream, Vol. 1</span>
-                <span class="sp-lib-sub">Album · NINA</span>
+                <span class="sp-lib-sub">Album • NINA</span>
               </div>
             </div>
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb" style="background:#282828;"></div>
+              <div class="sp-lib-thumb" style="background:#282828;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">Offering</span>
-                <span class="sp-lib-sub">Upcoming album · Ibeyi</span>
+                <div style="display:flex;align-items:center;">
+                  <div style="flex-shrink:0;height:12px;padding-right:4px;width:16px;">
+                    <div style="height:12px;overflow:clip;position:relative;width:12px;">
+                      <svg viewBox="0 0 12 12" width="12" height="12" xmlns="http://www.w3.org/2000/svg" style="overflow-x:visible;overflow-y:visible;position:absolute;">
+                        <path d="M6.000 1.125C4.707 1.125 3.467 1.639 2.553 2.553C1.639 3.467 1.125 4.707 1.125 6.000C1.125 7.293 1.639 8.533 2.553 9.447C3.467 10.361 4.707 10.875 6.000 10.875C7.293 10.875 8.533 10.361 9.447 9.447C10.361 8.533 10.875 7.293 10.875 6.000C10.875 4.707 10.361 3.467 9.447 2.553C8.533 1.639 7.293 1.125 6.000 1.125ZM0.000 6.000C0.000 4.409 0.632 2.883 1.757 1.757C2.883 0.632 4.409 0.000 6.000 0.000C7.591 0.000 9.117 0.632 10.243 1.757C11.368 2.883 12.000 4.409 12.000 6.000C12.000 7.591 11.368 9.117 10.243 10.243C9.117 11.368 7.591 12.000 6.000 12.000C4.409 12.000 2.883 11.368 1.757 10.243C0.632 9.117 0.000 7.591 0.000 6.000Z" fill-rule="nonzero" fill="#B3B3B3"/>
+                        <path transform="matrix(1 0 0 1 5.438 2.438)" d="M0.563 0.000C0.712 0.000 0.855 0.059 0.960 0.165C1.066 0.270 1.125 0.413 1.125 0.563C1.125 0.563 1.125 3.000 1.125 3.000C1.125 3.000 2.813 3.000 2.813 3.000C2.962 3.000 3.105 3.059 3.210 3.165C3.316 3.270 3.375 3.413 3.375 3.563C3.375 3.712 3.316 3.855 3.210 3.960C3.105 4.066 2.962 4.125 2.813 4.125C2.813 4.125 0.000 4.125 0.000 4.125C0.000 4.125 0.000 0.563 0.000 0.563C0.000 0.413 0.059 0.270 0.165 0.165C0.270 0.059 0.413 0.000 0.563 0.000Z" fill-rule="nonzero" fill="#B3B3B3"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="sp-lib-sub">Upcoming album • Ibeyi</span>
+                </div>
               </div>
             </div>
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb" style="background:#482000;"></div>
+              <div class="sp-lib-thumb" style="background:#482000;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">Resurrection</span>
-                <span class="sp-lib-sub">Album · Chlöe</span>
+                <span class="sp-lib-sub">Album • Chlöe</span>
               </div>
             </div>
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb" style="background:#483840;"></div>
+              <div class="sp-lib-thumb" style="background:#483840;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">Murmurs Uncut</span>
-                <span class="sp-lib-sub">Album · Cosha</span>
+                <span class="sp-lib-sub">Album • Cosha</span>
               </div>
             </div>
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb" style="background:#377BB8;"></div>
+              <div class="sp-lib-thumb" style="background:#377BB8;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">Resonance</span>
-                <span class="sp-lib-sub">Album · Acid Arab</span>
+                <span class="sp-lib-sub">Album • Acid Arab</span>
               </div>
             </div>
             <div class="sp-lib-item">
-              <div class="sp-lib-thumb" style="background:#1D892E;"></div>
+              <div class="sp-lib-thumb" style="background:#1D892E;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
               <div class="sp-lib-info">
                 <span class="sp-lib-name">WHACK'S MUSEUM</span>
-                <span class="sp-lib-sub">Album · Tierra Whack</span>
+                <span class="sp-lib-sub">Album • Tierra Whack</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#1D892E;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">WHACK'S MUSEUM</span>
+                <span class="sp-lib-sub">Album • Tierra Whack</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#1D892E;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">WHACK'S MUSEUM</span>
+                <span class="sp-lib-sub">Album • Tierra Whack</span>
+              </div>
+            </div>
+            <div class="sp-lib-item">
+              <div class="sp-lib-thumb" style="background:#1D892E;box-shadow:#00000080 0px 4px 60px;border-radius:4px;"><div class="sp-lib-thumb-overlay"></div></div>
+              <div class="sp-lib-info">
+                <span class="sp-lib-name">WHACK'S MUSEUM</span>
+                <span class="sp-lib-sub">Album • Tierra Whack</span>
               </div>
             </div>
           </div>
@@ -1141,29 +1350,95 @@
               <!-- Title: 72px/800/white, line-height 88px -->
               <div class="sp-playlist-name">Your Playlist Name</div>
               <!-- Metadata: 14px/#FFFFFFB3, bold username -->
-              <div class="sp-playlist-info"><strong>spotify</strong> · 40 saves · 387 songs, over 24 hr</div>
+              <div class="sp-playlist-info" style="display:flex;align-items:center;gap:2px;padding-top:4px;">
+                <div style="width:24px;height:24px;border-radius:50%;background:#252525;flex-shrink:0;"></div>
+                <strong style="color:#FFFFFF;font-weight:700;padding-left:4px;">spotify</strong>
+                <span class="sp-playlist-saves" style="color:rgba(255,255,255,0.7);">&nbsp;•&nbsp;40 saves&nbsp;•&nbsp;387 songs, over 24 hr</span>
+              </div>
             </div>
           </div>
 
+          <!-- 1ST-0: controls + tracklist wrapper with gradient overlay -->
+          <div class="sp-track-section">
+            <div class="sp-tracklist-gradient"></div>
           <!-- Controls: padding 24px, height 104px -->
           <div class="sp-controls">
-            <!-- Play: 56×56, #1ED760 -->
-            <div class="sp-play-btn">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="black" style="margin-left:2px"><polygon points="4,2 18,10 4,18"/></svg>
+            <!-- Play button: 56×56 green circle -->
+            <div style="display:flex;align-items:flex-start;gap:24px;flex-shrink:0;">
+              <div class="sp-play-btn">
+                <div style="display:flex;align-items:flex-start;">
+                  <div style="flex-shrink:0;height:24px;overflow:clip;position:relative;width:24px;">
+                    <svg layerName="Vector" viewBox="0 0 14.89 16.98" preserveAspectRatio="none" width="14.89" height="16.98" xmlns="http://www.w3.org/2000/svg" style="width:round(62.0401%,1px);height:round(70.7315%,1px);left:25%;top:14.6342%;overflow-x:visible;overflow-y:visible;position:absolute;">
+                      <path d="M1.050 0.094C1.050 0.094 14.540 7.882 14.540 7.882C14.646 7.943 14.735 8.032 14.796 8.138C14.857 8.244 14.890 8.365 14.890 8.488C14.890 8.611 14.857 8.731 14.796 8.838C14.735 8.944 14.646 9.032 14.540 9.094C14.540 9.094 1.050 16.882 1.050 16.882C0.944 16.943 0.823 16.976 0.700 16.976C0.577 16.976 0.457 16.943 0.350 16.882C0.244 16.820 0.155 16.732 0.094 16.626C0.032 16.519 0.000 16.399 0.000 16.276C0.000 16.276 0.000 0.700 0.000 0.700C0.000 0.577 0.032 0.456 0.094 0.350C0.155 0.243 0.244 0.155 0.350 0.094C0.457 0.032 0.577 -0.000 0.700 0.000C0.823 0.000 0.944 0.032 1.050 0.094Z" fill-rule="nonzero" fill="#000000"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
             </div>
             <!-- Shuffle -->
-            <svg class="sp-ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-            <!-- Download -->
-            <svg class="sp-ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
-            <!-- Add user -->
-            <svg class="sp-ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-            <!-- Mix button -->
-            <div class="sp-mix-btn">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
-              Mix
+            <div style="display:flex;align-items:flex-start;gap:24px;flex-shrink:0;">
+              <div class="sp-ctrl-icon-wrap">
+                <div style="flex-shrink:0;height:32px;overflow:clip;position:relative;width:32px;">
+                  <svg viewBox="0 0 32 32" width="32" height="32" xmlns="http://www.w3.org/2000/svg" style="left:0;top:0;width:32px;height:32px;overflow-x:visible;overflow-y:visible;position:absolute;">
+                    <path transform="matrix(1 0 0 1 1.333 2.676)" layerName="Vector" d="M23.717 2.260C23.474 2.008 23.340 1.671 23.343 1.322C23.346 0.972 23.486 0.638 23.734 0.391C23.981 0.143 24.315 0.003 24.665 0.000C25.014 -0.003 25.351 0.131 25.603 0.374C25.603 0.374 30.552 5.324 30.552 5.324C30.552 5.324 25.603 10.273 25.603 10.273C25.480 10.400 25.333 10.502 25.170 10.572C25.007 10.642 24.832 10.678 24.655 10.680C24.478 10.681 24.303 10.648 24.139 10.581C23.975 10.514 23.826 10.415 23.701 10.289C23.576 10.164 23.477 10.015 23.410 9.852C23.343 9.688 23.309 9.512 23.310 9.335C23.312 9.158 23.349 8.983 23.419 8.820C23.488 8.658 23.590 8.511 23.717 8.388C23.717 8.388 25.448 6.657 25.448 6.657C25.448 6.657 23.424 6.657 23.424 6.657C22.452 6.657 21.492 6.869 20.611 7.279C19.729 7.689 18.949 8.287 18.323 9.030C18.323 9.030 8.528 20.670 8.528 20.670C7.652 21.712 6.559 22.549 5.325 23.123C4.092 23.698 2.747 23.995 1.387 23.996C1.387 23.996 0.000 23.996 0.000 23.996C0.000 23.996 0.000 21.329 0.000 21.329C0.000 21.329 1.387 21.329 1.387 21.329C2.359 21.329 3.319 21.116 4.200 20.706C5.081 20.296 5.862 19.698 6.488 18.954C6.488 18.954 16.281 7.314 16.281 7.314C17.158 6.273 18.251 5.436 19.485 4.861C20.719 4.287 22.064 3.990 23.425 3.990C23.425 3.990 25.449 3.990 25.449 3.990C25.449 3.990 23.717 2.260 23.717 2.260Z" fill-rule="nonzero" fill="#B3B3B3"/>
+                    <path transform="matrix(1 0 0 1 1.333 5.329)" layerName="Vector" d="M23.717 13.723C23.467 13.973 23.327 14.312 23.327 14.665C23.327 15.019 23.467 15.358 23.717 15.608C23.717 15.608 25.448 17.337 25.448 17.337C25.448 17.337 23.424 17.337 23.424 17.337C22.452 17.338 21.492 17.125 20.611 16.715C19.729 16.305 18.949 15.708 18.323 14.964C18.323 14.964 16.452 12.740 16.452 12.740C16.452 12.740 14.711 14.812 14.711 14.812C14.711 14.812 16.281 16.679 16.281 16.679C17.157 17.720 18.251 18.558 19.485 19.132C20.718 19.706 22.063 20.004 23.424 20.004C23.424 20.004 25.448 20.004 25.448 20.004C25.448 20.004 23.717 21.735 23.717 21.735C23.590 21.858 23.488 22.005 23.419 22.167C23.349 22.330 23.312 22.505 23.310 22.682C23.309 22.859 23.343 23.035 23.410 23.199C23.477 23.362 23.576 23.511 23.701 23.637C23.826 23.762 23.975 23.861 24.139 23.928C24.303 23.995 24.478 24.029 24.655 24.027C24.832 24.025 25.007 23.989 25.170 23.919C25.333 23.849 25.480 23.747 25.603 23.620C25.603 23.620 30.552 18.671 30.552 18.671C30.552 18.671 25.603 13.720 25.603 13.720C25.353 13.470 25.014 13.330 24.660 13.330C24.306 13.330 23.967 13.470 23.717 13.720C23.717 13.720 23.717 13.723 23.717 13.723ZM8.528 3.324C8.528 3.324 11.225 6.529 11.225 6.529C11.225 6.529 9.483 8.600 9.483 8.600C9.483 8.600 6.488 5.040 6.488 5.040C5.862 4.296 5.081 3.699 4.200 3.289C3.319 2.879 2.359 2.666 1.387 2.667C1.387 2.667 0.000 2.667 0.000 2.667C0.000 2.667 0.000 0.000 0.000 0.000C0.000 0.000 1.387 0.000 1.387 0.000C2.747 0.000 4.092 0.298 5.325 0.872C6.559 1.446 7.652 2.283 8.528 3.324Z" fill-rule="nonzero" fill="#B3B3B3"/>
+                  </svg>
+                </div>
+              </div>
             </div>
-            <!-- More -->
-            <svg class="sp-ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            <!-- Save/Download -->
+            <div style="display:flex;align-items:flex-start;gap:24px;flex-shrink:0;">
+              <div class="sp-ctrl-icon-wrap" style="padding-block:12px;">
+                <div style="flex-shrink:0;height:32px;overflow:clip;position:relative;width:32px;">
+                  <svg viewBox="0 0 32 32" width="32" height="32" xmlns="http://www.w3.org/2000/svg" style="left:0;top:0;width:32px;height:32px;overflow-x:visible;overflow-y:visible;position:absolute;">
+                    <path transform="matrix(1 0 0 1 1.333 1.333)" layerName="Vector" d="M14.667 2.667C13.091 2.667 11.530 2.977 10.074 3.580C8.619 4.183 7.296 5.067 6.181 6.181C5.067 7.296 4.183 8.619 3.580 10.074C2.977 11.530 2.667 13.091 2.667 14.667C2.667 16.243 2.977 17.803 3.580 19.259C4.183 20.715 5.067 22.038 6.181 23.152C7.296 24.266 8.619 25.150 10.074 25.753C11.530 26.356 13.091 26.667 14.667 26.667C17.849 26.667 20.902 25.402 23.152 23.152C25.402 20.902 26.667 17.849 26.667 14.667C26.667 11.484 25.402 8.432 23.152 6.181C20.902 3.931 17.849 2.667 14.667 2.667ZM0.000 14.667C0.000 6.567 6.567 0.000 14.667 0.000C22.767 0.000 29.333 6.567 29.333 14.667C29.333 22.767 22.767 29.333 14.667 29.333C6.567 29.333 0.000 22.767 0.000 14.667Z" fill-rule="nonzero" fill="#B3B3B3"/>
+                    <path transform="matrix(1 0 0 1 9.984 8.067)" layerName="Vector" d="M6.016 0.000C6.370 0.000 6.709 0.140 6.959 0.391C7.209 0.641 7.350 0.980 7.350 1.333C7.350 1.333 7.350 11.315 7.350 11.315C7.350 11.315 9.740 8.924 9.740 8.924C9.863 8.797 10.011 8.695 10.173 8.625C10.336 8.555 10.511 8.519 10.688 8.517C10.865 8.515 11.040 8.549 11.204 8.616C11.368 8.683 11.517 8.782 11.642 8.907C11.767 9.033 11.866 9.182 11.933 9.345C12.001 9.509 12.034 9.685 12.033 9.862C12.031 10.039 11.994 10.214 11.925 10.377C11.855 10.539 11.753 10.686 11.626 10.809C11.626 10.809 6.016 16.419 6.016 16.419C6.016 16.419 0.407 10.809 0.407 10.809C0.280 10.686 0.178 10.539 0.108 10.377C0.038 10.214 0.002 10.039 0.000 9.862C-0.001 9.685 0.032 9.509 0.099 9.345C0.166 9.182 0.265 9.033 0.391 8.907C0.516 8.782 0.665 8.683 0.828 8.616C0.992 8.549 1.168 8.515 1.345 8.517C1.522 8.519 1.697 8.555 1.860 8.625C2.022 8.695 2.169 8.797 2.292 8.924C2.292 8.924 4.683 11.315 4.683 11.315C4.683 11.315 4.683 1.333 4.683 1.333C4.683 0.980 4.824 0.641 5.074 0.391C5.324 0.140 5.663 0.000 6.016 0.000Z" fill-rule="nonzero" fill="#B3B3B3"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <!-- Add to queue -->
+            <div style="display:flex;align-items:flex-start;gap:24px;flex-shrink:0;">
+              <div class="sp-ctrl-icon-wrap" style="padding-block:12px;">
+                <div style="flex-shrink:0;height:32px;overflow:clip;position:relative;width:32px;">
+                  <svg layerName="Vector" viewBox="0 0 32 29.33" preserveAspectRatio="none" width="32" height="29.33" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:round(91.6667%,1px);left:0%;top:0%;overflow-x:visible;overflow-y:visible;position:absolute;">
+                    <path d="M6.653 4.000C6.653 4.000 10.644 4.000 10.644 4.000C10.644 4.000 10.644 6.667 10.644 6.667C10.644 6.667 6.653 6.667 6.653 6.667C6.653 6.667 6.653 10.667 6.653 10.667C6.653 10.667 3.992 10.667 3.992 10.667C3.992 10.667 3.992 6.667 3.992 6.667C3.992 6.667 0.000 6.667 0.000 6.667C0.000 6.667 0.000 4.000 0.000 4.000C0.000 4.000 3.992 4.000 3.992 4.000C3.992 4.000 3.992 0.000 3.992 0.000C3.992 0.000 6.652 0.000 6.652 0.000C6.652 0.000 6.653 4.000 6.653 4.000ZM16.371 3.289C17.774 2.669 19.337 2.506 20.838 2.822C22.339 3.138 23.703 3.918 24.737 5.052C25.416 5.806 25.930 6.693 26.248 7.656C26.488 8.365 26.688 9.621 26.617 10.827C26.487 13.039 25.551 14.853 24.285 16.368C24.285 16.368 23.709 17.061 23.709 17.061C23.647 17.136 23.602 17.223 23.578 17.317C23.553 17.411 23.549 17.509 23.566 17.604C23.583 17.700 23.621 17.790 23.676 17.870C23.732 17.949 23.804 18.015 23.888 18.064C23.888 18.064 28.675 20.833 28.675 20.833C29.687 21.419 30.527 22.261 31.110 23.275C31.694 24.288 32.001 25.437 32.000 26.607C32.000 26.607 32.000 29.333 32.000 29.333C32.000 29.333 6.653 29.333 6.653 29.333C6.653 29.333 6.653 26.607 6.653 26.607C6.653 25.437 6.959 24.288 7.543 23.275C8.127 22.261 8.967 21.419 9.979 20.833C9.979 20.833 14.765 18.064 14.765 18.064C14.849 18.015 14.922 17.949 14.977 17.869C15.033 17.790 15.071 17.699 15.087 17.603C15.104 17.508 15.100 17.409 15.075 17.316C15.050 17.222 15.005 17.135 14.943 17.060C14.943 17.060 14.369 16.369 14.369 16.369C14.369 16.369 14.367 16.368 14.367 16.368C13.101 14.855 12.167 13.039 12.035 10.827C11.964 9.621 12.164 8.365 12.404 7.656C12.722 6.693 13.236 5.806 13.915 5.052C14.602 4.300 15.438 3.700 16.371 3.289ZM19.325 5.333C18.677 5.333 18.035 5.468 17.441 5.730C16.847 5.992 16.315 6.374 15.877 6.853C15.448 7.335 15.124 7.900 14.924 8.513C14.801 8.876 14.640 9.785 14.692 10.669C14.780 12.168 15.407 13.459 16.408 14.656C16.408 14.656 16.409 14.659 16.409 14.659C16.409 14.659 16.987 15.352 16.987 15.352C17.297 15.725 17.523 16.162 17.647 16.632C17.772 17.101 17.792 17.592 17.708 18.071C17.623 18.549 17.434 19.003 17.156 19.401C16.877 19.799 16.515 20.131 16.095 20.375C16.095 20.375 11.309 23.143 11.309 23.143C10.702 23.494 10.198 23.999 9.848 24.607C9.497 25.215 9.313 25.905 9.313 26.607C9.313 26.607 9.313 26.667 9.313 26.667C9.313 26.667 29.340 26.667 29.340 26.667C29.340 26.667 29.340 26.607 29.340 26.607C29.340 25.905 29.156 25.215 28.805 24.607C28.455 23.999 27.950 23.494 27.343 23.143C27.343 23.143 22.557 20.375 22.557 20.375C22.137 20.131 21.775 19.799 21.497 19.401C21.218 19.003 21.030 18.549 20.945 18.071C20.860 17.593 20.881 17.102 21.005 16.633C21.129 16.163 21.355 15.727 21.665 15.353C21.665 15.353 22.243 14.660 22.243 14.660C22.243 14.660 22.245 14.656 22.245 14.656C23.245 13.459 23.872 12.168 23.961 10.669C24.013 9.785 23.852 8.876 23.729 8.513C23.512 7.873 23.196 7.313 22.776 6.853C22.338 6.374 21.805 5.991 21.211 5.729C20.617 5.468 19.975 5.333 19.325 5.333Z" fill-rule="nonzero" fill="#B3B3B3"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <!-- Mix button -->
+            <div style="display:flex;align-items:flex-start;gap:24px;flex-shrink:0;">
+              <div class="sp-mix-btn">
+                Mix
+                <div style="display:flex;align-items:flex-start;position:absolute;left:12px;top:7px;">
+                  <div style="flex-shrink:0;height:16px;overflow:clip;position:relative;width:16px;">
+                    <svg layerName="Vector" viewBox="0 0 13.5 16" preserveAspectRatio="none" width="13.5" height="16" xmlns="http://www.w3.org/2000/svg" style="width:round(84.375%,1px);height:100%;left:7.8125%;top:0%;overflow-x:visible;overflow-y:visible;position:absolute;">
+                      <path d="M0.000 9.000C0.000 8.867 0.053 8.740 0.146 8.646C0.240 8.553 0.367 8.500 0.500 8.500C0.500 8.500 2.250 8.500 2.250 8.500C2.250 8.500 2.250 0.750 2.250 0.750C2.250 0.551 2.329 0.360 2.470 0.220C2.610 0.079 2.801 0.000 3.000 0.000C3.199 0.000 3.390 0.079 3.530 0.220C3.671 0.360 3.750 0.551 3.750 0.750C3.750 0.750 3.750 8.500 3.750 8.500C3.750 8.500 5.500 8.500 5.500 8.500C5.633 8.500 5.760 8.553 5.854 8.646C5.947 8.740 6.000 8.867 6.000 9.000C6.000 9.000 6.000 10.500 6.000 10.500C6.000 10.633 5.947 10.760 5.854 10.854C5.760 10.947 5.633 11.000 5.500 11.000C5.500 11.000 0.500 11.000 0.500 11.000C0.367 11.000 0.240 10.947 0.146 10.854C0.053 10.760 0.000 10.633 0.000 10.500C0.000 10.500 0.000 9.000 0.000 9.000ZM7.500 5.000C7.500 4.867 7.553 4.740 7.646 4.646C7.740 4.553 7.867 4.500 8.000 4.500C8.000 4.500 9.750 4.500 9.750 4.500C9.750 4.500 9.750 0.750 9.750 0.750C9.750 0.551 9.829 0.360 9.970 0.220C10.110 0.079 10.301 0.000 10.500 0.000C10.699 0.000 10.890 0.079 11.030 0.220C11.171 0.360 11.250 0.551 11.250 0.750C11.250 0.750 11.250 4.500 11.250 4.500C11.250 4.500 13.000 4.500 13.000 4.500C13.133 4.500 13.260 4.553 13.354 4.646C13.447 4.740 13.500 4.867 13.500 5.000C13.500 5.000 13.500 6.500 13.500 6.500C13.500 6.633 13.447 6.760 13.354 6.854C13.260 6.947 13.133 7.000 13.000 7.000C13.000 7.000 8.000 7.000 8.000 7.000C7.867 7.000 7.740 6.947 7.646 6.854C7.553 6.760 7.500 6.633 7.500 6.500C7.500 6.500 7.500 5.000 7.500 5.000ZM2.250 12.500C2.250 12.500 2.250 15.250 2.250 15.250C2.250 15.449 2.329 15.640 2.470 15.780C2.610 15.921 2.801 16.000 3.000 16.000C3.199 16.000 3.390 15.921 3.530 15.780C3.671 15.640 3.750 15.449 3.750 15.250C3.750 15.250 3.750 12.500 3.750 12.500C3.750 12.500 2.250 12.500 2.250 12.500ZM9.750 15.250C9.750 15.250 9.750 8.500 9.750 8.500C9.750 8.500 11.250 8.500 11.250 8.500C11.250 8.500 11.250 15.250 11.250 15.250C11.250 15.449 11.171 15.640 11.030 15.780C10.890 15.921 10.699 16.000 10.500 16.000C10.301 16.000 10.110 15.921 9.970 15.780C9.829 15.640 9.750 15.449 9.750 15.250Z" fill-rule="nonzero" fill="#FFFFFF"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- More (three dots) -->
+            <div style="display:flex;align-items:flex-start;gap:24px;flex-shrink:0;">
+              <div class="sp-ctrl-icon-wrap" style="padding-block:12px;">
+                <div style="flex-shrink:0;height:32px;overflow:clip;position:relative;width:32px;">
+                  <svg layerName="Vector" viewBox="0 0 24 4" width="24" height="4" xmlns="http://www.w3.org/2000/svg" style="width:round(75%,1px);height:round(12.5%,1px);left:12.5%;top:43.75%;overflow-x:visible;overflow-y:visible;position:absolute;">
+                    <path d="M2.000 4.000C2.530 4.000 3.039 3.789 3.414 3.414C3.789 3.039 4.000 2.530 4.000 2.000C4.000 1.470 3.789 0.961 3.414 0.586C3.039 0.211 2.530 0.000 2.000 0.000C1.470 0.000 0.961 0.211 0.586 0.586C0.211 0.961 0.000 1.470 0.000 2.000C0.000 2.530 0.211 3.039 0.586 3.414C0.961 3.789 1.470 4.000 2.000 4.000ZM22.000 4.000C22.530 4.000 23.039 3.789 23.414 3.414C23.789 3.039 24.000 2.530 24.000 2.000C24.000 1.470 23.789 0.961 23.414 0.586C23.039 0.211 22.530 0.000 22.000 0.000C21.470 0.000 20.961 0.211 20.586 0.586C20.211 0.961 20.000 1.470 20.000 2.000C20.000 2.530 20.211 3.039 20.586 3.414C20.961 3.789 21.470 4.000 22.000 4.000ZM12.000 4.000C12.530 4.000 13.039 3.789 13.414 3.414C13.789 3.039 14.000 2.530 14.000 2.000C14.000 1.470 13.789 0.961 13.414 0.586C13.039 0.211 12.530 0.000 12.000 0.000C11.470 0.000 10.961 0.211 10.586 0.586C10.211 0.961 10.000 1.470 10.000 2.000C10.000 2.530 10.211 3.039 10.586 3.414C10.961 3.789 11.470 4.000 12.000 4.000Z" fill-rule="nonzero" fill="#B3B3B3"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <!-- List (right-aligned) -->
+            <div class="sp-list-btn">
+              <span>List</span>
+              <div style="flex-shrink:0;height:16px;overflow:clip;position:relative;width:16px;">
+                <svg layerName="Vector" viewBox="0 0 14 13" width="14" height="13" xmlns="http://www.w3.org/2000/svg" style="width:round(87.5%,1px);height:round(81.25%,1px);left:6.25%;top:9.375%;overflow-x:visible;overflow-y:visible;position:absolute;">
+                  <path d="M14.000 13.000C14.000 13.000 4.000 13.000 4.000 13.000C4.000 13.000 4.000 11.500 4.000 11.500C4.000 11.500 14.000 11.500 14.000 11.500C14.000 11.500 14.000 13.000 14.000 13.000ZM14.000 7.250C14.000 7.250 4.000 7.250 4.000 7.250C4.000 7.250 4.000 5.750 4.000 5.750C4.000 5.750 14.000 5.750 14.000 5.750C14.000 5.750 14.000 7.250 14.000 7.250ZM14.000 1.500C14.000 1.500 4.000 1.500 4.000 1.500C4.000 1.500 4.000 0.000 4.000 0.000C4.000 0.000 14.000 0.000 14.000 0.000C14.000 0.000 14.000 1.500 14.000 1.500ZM2.000 1.500C2.000 1.500 0.000 1.500 0.000 1.500C0.000 1.500 0.000 0.000 0.000 0.000C0.000 0.000 2.000 0.000 2.000 0.000C2.000 0.000 2.000 1.500 2.000 1.500ZM2.000 13.000C2.000 13.000 0.000 13.000 0.000 13.000C0.000 13.000 0.000 11.500 0.000 11.500C0.000 11.500 2.000 11.500 2.000 11.500C2.000 11.500 2.000 13.000 2.000 13.000ZM2.000 7.250C2.000 7.250 0.000 7.250 0.000 7.250C0.000 7.250 0.000 5.750 0.000 5.750C0.000 5.750 2.000 5.750 2.000 5.750C2.000 5.750 2.000 7.250 2.000 7.250Z" fill-rule="nonzero" fill="rgb(255 255 255 / 70%)"/>
+                </svg>
+              </div>
+            </div>
           </div>
 
           <!-- Track list -->
@@ -1196,8 +1471,8 @@
             </div>
             <div class="sp-track-row">
               <span class="sp-track-num">3</span>
-              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">Fame is a Gun – triple j Like A Version</span><span class="sp-track-artist">Rebecca Black</span></div></div>
-              <span class="sp-track-album">Fame is a Gun – triple j Like A Version</span>
+              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">Fame is a Gun - triple j Like A Version</span><span class="sp-track-artist">Rebecca Black</span></div></div>
+              <span class="sp-track-album">Fame is a Gun (triple j Like A Version)</span>
               <span class="sp-track-date">Jan 6, 2026</span>
               <span class="sp-track-dur">3:37</span>
             </div>
@@ -1217,13 +1492,35 @@
             </div>
             <div class="sp-track-row">
               <span class="sp-track-num">6</span>
-              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">drifting – remix</span><span class="sp-track-artist">Night Tapes, kryptogram</span></div></div>
-              <span class="sp-track-album">drifting – remix</span>
+              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">drifting - remix</span><span class="sp-track-artist">Night Tapes, kryptogram</span></div></div>
+              <span class="sp-track-album">drifting (remix)</span>
               <span class="sp-track-date">Jan 9, 2026</span>
               <span class="sp-track-dur">4:36</span>
             </div>
+            <div class="sp-track-row">
+              <span class="sp-track-num">7</span>
+              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">Lonely Touch</span><span class="sp-track-artist">Sarah Kinsley</span></div></div>
+              <span class="sp-track-album">Lonely Touch</span>
+              <span class="sp-track-date">Jan 9, 2026</span>
+              <span class="sp-track-dur">3:21</span>
+            </div>
+            <div class="sp-track-row">
+              <span class="sp-track-num">8</span>
+              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">Cheddar</span><span class="sp-track-artist">ELIZA</span></div></div>
+              <span class="sp-track-album">Cheddar</span>
+              <span class="sp-track-date">Jan 9, 2026</span>
+              <span class="sp-track-dur">3:01</span>
+            </div>
+            <div class="sp-track-row">
+              <span class="sp-track-num">11</span>
+              <div class="sp-track-info"><div class="sp-track-thumb"></div><div class="sp-track-text"><span class="sp-track-name">In My House</span><span class="sp-track-artist">Sin Cos Tan</span></div></div>
+              <span class="sp-track-album">In My House</span>
+              <span class="sp-track-date">Jan 16, 2026</span>
+              <span class="sp-track-dur">5:34</span>
+            </div>
             </div>
           </div>
+          </div><!-- /sp-track-section -->
         </div>
 
       </div>
@@ -1247,14 +1544,12 @@
           </svg>
         </button>
         <div class="layout-dropdown-menu" id="layout-dropdown-menu">
+          <button class="layout-option" data-layout="bubble">Bubble</button>
           <button class="layout-option" data-layout="beehive">Beehive</button>
           <button class="layout-option" data-layout="strips">Strips</button>
           <button class="layout-option" data-layout="grid">Grid</button>
+          <button class="layout-option" data-layout="spiral">Spiral</button>
         </div>
-      </div>
-      <div class="view-toggle">
-        <button class="view-btn active" id="view-cover">Cover</button>
-        <button class="view-btn" id="view-spotify">Spotify</button>
       </div>
     </div>
 
@@ -1347,6 +1642,119 @@
   </div>
 
   <script>
+  // ── Auth & playlist flow ──────────────────────────────────────────────────
+  const authScreen     = document.getElementById('auth-screen');
+  const playlistScreen = document.getElementById('playlist-screen');
+  const appRoot        = document.querySelector('.canvas-wrap');
+  const panelEl        = document.querySelector('.panel');
+
+  let selectedPlaylistId   = null;
+  let selectedPlaylistName = null;
+
+  // Hide app until auth check completes
+  if (appRoot) appRoot.style.display = 'none';
+  if (panelEl) panelEl.style.display = 'none';
+
+  async function initAuth() {
+    // Check for error param from OAuth redirect
+    const params = new URLSearchParams(location.search);
+    if (params.has('error')) {
+      history.replaceState({}, '', '/');
+    }
+
+    try {
+      const res = await fetch('/api/me');
+      if (!res.ok) {
+        showAuth();
+        return;
+      }
+      const user = await res.json();
+      showPlaylistPicker(user);
+    } catch {
+      showAuth();
+    }
+  }
+
+  function showAuth() {
+    authScreen.classList.remove('hidden');
+    playlistScreen.classList.add('hidden');
+    appRoot.style.display = 'none';
+    if (panelEl) panelEl.style.display = 'none';
+  }
+
+  async function showPlaylistPicker(user) {
+    authScreen.classList.add('hidden');
+    playlistScreen.classList.remove('hidden');
+    appRoot.style.display = 'none';
+    if (panelEl) panelEl.style.display = 'none';
+
+    // Show user info + logout link
+    document.getElementById('playlist-user').innerHTML =
+      `<span>Logged in as <strong style="color:#fff">${user.name || 'you'}</strong></span>
+       &nbsp;·&nbsp;<a href="/api/logout">Log out</a>`;
+
+    // Load playlists
+    const grid = document.getElementById('playlist-grid');
+    grid.innerHTML = '<div style="color:#535353;font-family:system-ui;font-size:14px;grid-column:1/-1;padding:24px 0;">Loading playlists…</div>';
+
+    try {
+      const res = await fetch('/api/playlists');
+      const playlists = await res.json();
+      grid.innerHTML = '';
+
+      for (const p of playlists) {
+        const item = document.createElement('div');
+        item.className = 'playlist-item';
+        item.innerHTML = `
+          ${p.image
+            ? `<img src="${p.image}" alt="${p.name}" loading="lazy">`
+            : `<div class="playlist-item-img-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="#535353"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`}
+          <div class="playlist-item-name">${p.name}</div>
+          <div class="playlist-item-count">${p.trackCount} songs</div>`;
+        item.addEventListener('click', () => selectPlaylist(p.id, p.name));
+        grid.appendChild(item);
+      }
+    } catch {
+      grid.innerHTML = '<div style="color:#B3B3B3;font-family:system-ui;font-size:14px;grid-column:1/-1;">Failed to load playlists.</div>';
+    }
+  }
+
+  async function selectPlaylist(playlistId, playlistName) {
+    selectedPlaylistId   = playlistId;
+    selectedPlaylistName = playlistName;
+
+    playlistScreen.classList.add('hidden');
+    appRoot.style.display = '';
+    if (panelEl) panelEl.style.display = '';
+
+    // Update playlist name in Spotify mockup
+    const nameEl = document.querySelector('.sp-playlist-name');
+    if (nameEl) nameEl.textContent = playlistName;
+
+    // Load real tracks
+    showOverlay('Loading tracks…');
+    try {
+      const res  = await fetch(`/api/tracks?playlistId=${playlistId}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      window._spotifyTracks = data;
+      // Update track count in mockup
+      const saveEl = document.querySelector('.sp-playlist-saves');
+      if (saveEl) saveEl.textContent = `${data.length} songs`;
+      hideOverlay();
+      await loadTracks();
+    } catch (err) {
+      hideOverlay();
+      alert('Failed to load tracks: ' + err.message);
+    }
+  }
+
+  // Override the tracks source used by the cover generator
+  window._spotifyTracks = null;
+
+  initAuth();
+  </script>
+  <script>
     const CANVAS_SIZE = 1000;
     const CENTER = CANVAS_SIZE / 2;
     const canvas = document.getElementById('canvas');
@@ -1428,12 +1836,40 @@
       return pts;
     }
 
+    function spiralLayout(count, maxRadius, padding, minRadius) {
+      const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+      const pts = [];
+      // Step tuned so the spiral expands at a rate that fits many small outer covers
+      const step = maxRadius * 1.2 + padding * 0.3;
+      const maxDist = CANVAS_SIZE * 0.48;
+      const minR = minRadius !== undefined ? minRadius : maxRadius * 0.2;
+      let idx = 0;
+
+      while (pts.length < count && idx < count * 12) {
+        const dist = idx === 0 ? 0 : Math.sqrt(idx) * step;
+        const angle = idx * GOLDEN_ANGLE;
+        const x = CENTER + Math.cos(angle) * dist;
+        const y = CENTER + Math.sin(angle) * dist;
+        // Strong falloff: center=maxRadius, outermost≈20% of maxRadius
+        const r = Math.max(minR, maxRadius * (1 - 0.8 * dist / maxDist));
+        idx++;
+
+        if (x - r < 0 || x + r > CANVAS_SIZE || y - r < 0 || y + r > CANVAS_SIZE) continue;
+        // Skip if this cover would overlap any already-placed cover
+        if (pts.some(p => Math.hypot(x - p.x, y - p.y) < r + p.r + padding)) continue;
+
+        pts.push({ x, y, r, shape: 'circle' });
+      }
+      return pts;
+    }
+
     function computeLayout(settings, onDone) {
       const count = Math.min(settings.maxTracks, tracks.length);
       if (settings.layout === 'bubble') requestPack(settings, onDone);
       else if (settings.layout === 'beehive') onDone(beehiveLayout(count, settings.maxRadius, settings.padding));
       else if (settings.layout === 'strips') onDone(stripsLayout(count, settings.padding));
       else if (settings.layout === 'grid') onDone(gridLayout(count, settings.padding));
+      else if (settings.layout === 'spiral') onDone(spiralLayout(count, settings.maxRadius, settings.padding, settings.minRadius));
     }
 
     // ── Animation ─────────────────────────────────────────────────────────────
@@ -1595,6 +2031,10 @@
         countLabel.textContent = 'Tiles';
         hide('row-maxRadius'); hide('row-minRadius');
         document.getElementById('maxTracks').max = 300;
+      } else if (layout === 'spiral') {
+        countLabel.textContent = 'Max. Covers';
+        show('row-minRadius');
+        document.getElementById('maxTracks').max = 300;
       }
 
       updateFill('maxTracks');
@@ -1615,10 +2055,9 @@
     }
 
     async function loadTracks() {
-      setOverlay(true, 'Loading playlist…');
-      const res = await fetch('/api/tracks');
-      tracks = await res.json();
-      if (tracks.error) throw new Error(tracks.error);
+      if (!window._spotifyTracks) return;
+      setOverlay(true, 'Loading artworks…');
+      tracks = window._spotifyTracks;
 
       loadedImages = new Array(tracks.length).fill(null);
       const BATCH = 20;
@@ -1632,6 +2071,10 @@
       render(true);
       document.getElementById('btn-publish').disabled = false;
     }
+
+    // Called by auth flow once tracks are ready
+    function showOverlay(msg) { setOverlay(true, msg); }
+    function hideOverlay()    { setOverlay(false); }
 
     function setOverlay(show, msg = '') {
       document.getElementById('overlay-msg').textContent = msg;
@@ -1705,10 +2148,11 @@
       btn.disabled = true;
       setStatus('<span class="spinner"></span>Pushing…');
       try {
-        const res = await fetch('/api/publish', {
+        const imageBase64 = canvas.toDataURL('image/jpeg', 0.95);
+        const res = await fetch('/api/push-cover', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(getSettings()),
+          body: JSON.stringify({ playlistId: selectedPlaylistId, imageBase64 }),
         });
         const data = await res.json();
         if (data.error) throw new Error(data.error);
@@ -1737,7 +2181,6 @@
       const btn = document.getElementById('btn-reload');
       btn.disabled = true;
       try {
-        await fetch('/api/reload', { method: 'POST' });
         loadedImages = []; tracks = []; state = []; target = [];
         await loadTracks();
       } catch (err) {
@@ -1756,7 +2199,7 @@
 
     const canvasWrap    = document.querySelector('.canvas-wrap');
     const spotifyFrame  = document.getElementById('spotify-preview');
-    const SP_W = 1506, SP_H = 1159;
+    const SP_W = 1506, SP_H = 992;
     const MIN_ZOOM = 0.05, MAX_ZOOM = 12;
 
     // Cover slot center within the 1506×1159 frame.
@@ -1806,36 +2249,71 @@
         `translate(${frameState.panX}px,${frameState.panY}px) scale(${frameState.zoom})`;
     }
 
-    // ── View toggle ───────────────────────────────────────────────────────────
-    document.getElementById('view-cover').addEventListener('click', () => {
+    // ── View switching ────────────────────────────────────────────────────────
+    const dimOverlay  = document.querySelector('.sp-chrome-dim');
+    const canvasFloat = document.getElementById('sp-canvas-float');
+
+    function switchToCover(animate = true) {
       if (currentView === 'cover') return;
       currentView = 'cover';
-      document.getElementById('view-cover').classList.add('active');
-      document.getElementById('view-spotify').classList.remove('active');
       frameState = coverInitState();
-      applyTransform(true);
+      applyTransform(animate);
       spotifyFrame.classList.add('cover-mode');
       spotifyFrame.addEventListener('transitionend', () =>
         spotifyFrame.classList.remove('view-transitioning'), { once: true });
-    });
+      canvasFloat.style.pointerEvents = 'none';
+      canvasFloat.style.cursor = '';
+    }
 
-    document.getElementById('view-spotify').addEventListener('click', () => {
+    function switchToSpotify(animate = true) {
       if (currentView === 'spotify') return;
       currentView = 'spotify';
-      document.getElementById('view-spotify').classList.add('active');
-      document.getElementById('view-cover').classList.remove('active');
+      dimOverlay.classList.remove('peek');
       spotifyFrame.classList.remove('cover-mode');
       frameState = spotifyInitState();
-      applyTransform(true);
+      applyTransform(animate);
       spotifyFrame.addEventListener('transitionend', () =>
         spotifyFrame.classList.remove('view-transitioning'), { once: true });
+      canvasFloat.style.pointerEvents = 'auto';
+      canvasFloat.style.cursor = 'zoom-in';
+      canvasWrap.style.cursor = '';
+    }
+
+    // In Spotify view: clicking the cover zooms into cover view
+    canvasFloat.addEventListener('click', e => {
+      if (currentView === 'spotify') {
+        e.stopPropagation();
+        switchToCover();
+      }
+    });
+
+    // In cover view: hover outside cover → peek; click outside → Spotify view
+    function isOverCover(clientX, clientY) {
+      const rect = canvasFloat.getBoundingClientRect();
+      return clientX >= rect.left && clientX <= rect.right &&
+             clientY >= rect.top  && clientY <= rect.bottom;
+    }
+
+    canvasWrap.addEventListener('mousemove', e => {
+      if (currentView !== 'cover' || isDragging) return;
+      const over = isOverCover(e.clientX, e.clientY);
+      dimOverlay.classList.toggle('peek', !over);
+      canvasWrap.style.cursor = over ? 'zoom-out' : 'pointer';
+    });
+
+    canvasWrap.addEventListener('mouseleave', () => {
+      if (currentView !== 'cover') return;
+      dimOverlay.classList.remove('peek');
+      canvasWrap.style.cursor = '';
     });
 
     // Drag to pan
-    let isDragging = false, dragStart = {x:0,y:0}, panAtDrag = {x:0,y:0};
+    let isDragging = false, pointerMoved = false;
+    let dragStart = {x:0,y:0}, panAtDrag = {x:0,y:0};
 
     canvasWrap.addEventListener('mousedown', e => {
       isDragging = true;
+      pointerMoved = false;
       dragStart = { x: e.clientX, y: e.clientY };
       panAtDrag = { x: frameState.panX, y: frameState.panY };
       canvasWrap.classList.add('dragging');
@@ -1844,18 +2322,27 @@
 
     window.addEventListener('mousemove', e => {
       if (!isDragging) return;
-      frameState.panX = panAtDrag.x + (e.clientX - dragStart.x);
-      frameState.panY = panAtDrag.y + (e.clientY - dragStart.y);
+      const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) pointerMoved = true;
+      frameState.panX = panAtDrag.x + dx;
+      frameState.panY = panAtDrag.y + dy;
       applyTransform(false);
     });
 
-    window.addEventListener('mouseup', () => {
-      if (isDragging) { isDragging = false; canvasWrap.classList.remove('dragging'); }
+    window.addEventListener('mouseup', e => {
+      if (!isDragging) return;
+      isDragging = false;
+      canvasWrap.classList.remove('dragging');
+      // Treat as a click only if the pointer didn't move significantly
+      if (!pointerMoved && currentView === 'cover') {
+        switchToSpotify();
+      }
     });
 
     // Scroll to zoom toward cursor
     canvasWrap.addEventListener('wheel', e => {
       e.preventDefault();
+      if (currentView === 'cover') return;
       const factor = e.deltaY > 0 ? 0.92 : 1.09;
       const rect = canvasWrap.getBoundingClientRect();
       const mx = e.clientX - rect.left - rect.width / 2;
@@ -1900,10 +2387,7 @@
     frameState = coverInitState();
     applyTransform(false);
     updateVisibility('bubble');
-    loadTracks().catch(err => {
-      setOverlay(false);
-      setStatus(err.message, 'err');
-    });
+    // Tracks are loaded by the auth flow via selectPlaylist() → window._spotifyTracks → loadTracks()
   </script>
 </body>
 </html>
